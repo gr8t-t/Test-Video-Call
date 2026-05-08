@@ -576,6 +576,373 @@
       .controls-row { grid-template-columns: 1fr; }
       .cta-row { grid-template-columns: 1fr; }
     }
+
+    /* ══════════════════════════════════════════
+       AUTH — LOGIN PAGE
+    ══════════════════════════════════════════ */
+    #auth-wall {
+      position: fixed; inset: 0; z-index: 50000;
+      background: #060608;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+    }
+    #auth-wall::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+      pointer-events: none; opacity: 0.5;
+    }
+    #auth-wall::after {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 500px;
+      background: radial-gradient(ellipse, rgba(255,26,26,0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .auth-container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 440px;
+      padding: 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 28px;
+    }
+
+    /* logo on login */
+    .auth-logo-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .auth-logo-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase;
+      color: #55556a;
+    }
+
+    /* login card */
+    .auth-card {
+      width: 100%;
+      background: #0d0d10;
+      border: 1px solid #1f1f26;
+      border-radius: 18px;
+      padding: 36px 32px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.4), transparent);
+    }
+
+    .auth-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; letter-spacing: 0.1em;
+      color: #f0f0f5; margin-bottom: 6px;
+      line-height: 1;
+    }
+    .auth-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: #55556a; margin-bottom: 28px;
+    }
+
+    .auth-field {
+      margin-bottom: 16px;
+    }
+    .auth-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: #55556a; display: block; margin-bottom: 7px;
+    }
+    .auth-input {
+      width: 100%;
+      background: #060608;
+      border: 1px solid #2a2a35;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #f0f0f5;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.82rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
+    }
+    .auth-input:focus {
+      border-color: #ff1a1a;
+      box-shadow: 0 0 0 3px rgba(255,26,26,0.08);
+    }
+    .auth-input::placeholder { color: #38384a; }
+
+    .auth-btn {
+      width: 100%; margin-top: 8px;
+      padding: 15px 24px;
+      background: linear-gradient(135deg, #ff1a1a 0%, #c0392b 60%, #7b0d0d 100%);
+      border: none; border-radius: 10px;
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; letter-spacing: 0.2em;
+      cursor: pointer;
+      transition: all 0.22s;
+      box-shadow: 0 4px 28px rgba(255,26,26,0.3);
+      position: relative; overflow: hidden;
+    }
+    .auth-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+    }
+    .auth-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 36px rgba(255,26,26,0.5);
+    }
+    .auth-btn:active { transform: translateY(0); }
+
+    /* error message inside card */
+    .auth-error {
+      display: none;
+      margin-top: 14px;
+      padding: 11px 14px; border-radius: 8px;
+      background: rgba(123,13,13,0.3);
+      border: 1px solid rgba(255,26,26,0.3);
+      color: #ff6b6b;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.04em;
+      line-height: 1.6; text-align: center;
+    }
+    .auth-error.show { display: block; }
+
+    /* ── GO PRO BANNER ── */
+    .auth-pro-banner {
+      width: 100%;
+      background: linear-gradient(135deg, #0d0d10 0%, #150505 50%, #0d0d10 100%);
+      border: 1px solid rgba(255,26,26,0.25);
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: flex; align-items: center; gap: 16px;
+      cursor: default;
+      transition: box-shadow 0.3s, border-color 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .auth-pro-banner::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.35), transparent);
+    }
+    .auth-pro-banner:hover {
+      border-color: rgba(255,26,26,0.5);
+      box-shadow: 0 0 28px rgba(255,26,26,0.12), 0 0 60px rgba(255,26,26,0.05);
+    }
+    .pro-icon {
+      font-size: 1.6rem; flex-shrink: 0;
+      filter: drop-shadow(0 0 8px rgba(255,26,26,0.6));
+    }
+    .pro-text { flex: 1; }
+    .pro-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.25rem; letter-spacing: 0.12em;
+      color: #ff1a1a;
+      text-shadow: 0 0 20px rgba(255,26,26,0.4);
+      line-height: 1;
+    }
+    .pro-tagline {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.1em;
+      color: #55556a; margin-top: 4px;
+    }
+    .pro-arrow {
+      font-size: 0.9rem; color: rgba(255,26,26,0.4);
+      flex-shrink: 0;
+    }
+
+    /* login page toast (separate from app toast) */
+    #auth-toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a0505;
+      border: 1px solid rgba(255,26,26,0.4);
+      color: #ff8080;
+      border-radius: 10px;
+      padding: 13px 24px;
+      font-family: 'Space Mono', monospace; font-size: 0.74rem;
+      max-width: 380px; text-align: center;
+      z-index: 60000;
+      transition: transform 0.35s cubic-bezier(.2,.8,.4,1), opacity 0.35s;
+      opacity: 0;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #auth-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── AUTH WALL FADE OUT ── */
+    #auth-wall.fade-out {
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════════
+       HEADER — user email chip
+    ══════════════════════════════════════════ */
+    #user-chip {
+      display: none;
+      align-items: center; gap: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.08em;
+      color: #55556a;
+    }
+    #user-chip .user-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,26,26,0.5);
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════
+       RIGHT PILL NAV
+    ══════════════════════════════════════════ */
+    #side-nav {
+      display: none;
+      position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+      z-index: 1000;
+      flex-direction: column; align-items: center; gap: 6px;
+      background: #0d0d10;
+      border: 1px solid #1f1f26;
+      border-radius: 100px;
+      padding: 12px 8px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,26,26,0.06);
+    }
+    .side-nav-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #55556a;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      transition: all 0.18s;
+      position: relative;
+    }
+    .side-nav-btn:hover {
+      background: rgba(255,26,26,0.1);
+      border-color: rgba(255,26,26,0.3);
+      color: #ff1a1a;
+    }
+    .side-nav-btn[data-tip]::after {
+      content: attr(data-tip);
+      position: absolute; right: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+      background: #0d0d10; border: 1px solid #2a2a35;
+      color: #f0f0f5;
+      font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em;
+      padding: 5px 10px; border-radius: 6px; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity 0.15s;
+    }
+    .side-nav-btn:hover::after { opacity: 1; }
+
+    .side-nav-divider {
+      width: 20px; height: 1px;
+      background: #1f1f26; flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════
+       HELP MODAL
+    ══════════════════════════════════════════ */
+    #help-modal-backdrop {
+      display: none;
+      position: fixed; inset: 0; z-index: 40000;
+      background: rgba(6,6,8,0.88);
+      backdrop-filter: blur(8px);
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    #help-modal-backdrop.open {
+      display: flex;
+      animation: backdrop-in 0.25s ease;
+    }
+    @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+
+    #help-modal {
+      width: 100%; max-width: 860px;
+      height: min(80vh, 700px);
+      background: #0d0d10;
+      border: 1px solid #2a2a35;
+      border-radius: 18px;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      animation: modal-in 0.28s cubic-bezier(.2,.8,.4,1);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,26,26,0.08);
+    }
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .help-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid #1f1f26;
+      flex-shrink: 0;
+    }
+    .help-modal-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: #55556a; display: flex; align-items: center; gap: 10px;
+    }
+    .help-modal-title span {
+      color: #ff1a1a; font-size: 0.8rem;
+    }
+    .help-modal-close {
+      width: 32px; height: 32px;
+      border-radius: 50%; border: 1px solid #2a2a35;
+      background: transparent; color: #55556a;
+      cursor: pointer; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .help-modal-close:hover {
+      background: rgba(255,26,26,0.1);
+      border-color: rgba(255,26,26,0.3);
+      color: #ff1a1a;
+    }
+    .help-modal-body {
+      flex: 1; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* PDF placeholder */
+    .help-placeholder {
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      padding: 40px;
+      text-align: center;
+    }
+    .help-placeholder-icon {
+      font-size: 2.5rem;
+      filter: drop-shadow(0 0 12px rgba(255,26,26,0.3));
+    }
+    .help-placeholder-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; letter-spacing: 0.1em;
+      color: #f0f0f5;
+    }
+    .help-placeholder-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.08em;
+      color: #55556a; line-height: 1.8; max-width: 320px;
+    }
+    .help-placeholder-badge {
+      padding: 8px 18px; border-radius: 100px;
+      border: 1px solid #2a2a35;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: #38384a;
+    }
   </style>
 </head>
 <body>
@@ -655,9 +1022,15 @@
       </div>
     </div>
 
-    <div id="status-badge">
-      <span class="dot"></span>
-      <span id="status-text">IDLE</span>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div id="user-chip">
+        <span class="user-dot"></span>
+        <span id="user-email-display"></span>
+      </div>
+      <div id="status-badge">
+        <span class="dot"></span>
+        <span id="status-text">IDLE</span>
+      </div>
     </div>
   </header>
 
@@ -826,6 +1199,154 @@
 
   <div id="toast"></div>
 
+  <!-- ══════════════════════════════════════════
+       AUTH TOAST (login page only)
+  ══════════════════════════════════════════ -->
+  <div id="auth-toast"></div>
+
+  <!-- ══════════════════════════════════════════
+       AUTH WALL — shown until login succeeds
+  ══════════════════════════════════════════ -->
+  <div id="auth-wall">
+    <div class="auth-container">
+
+      <!-- MARV Logo -->
+      <div class="auth-logo-wrap">
+        <svg class="marv-logo" viewBox="0 0 160 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="glow-a" x="-20%" y="-40%" width="140%" height="180%">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow2-a" x="-30%" y="-60%" width="160%" height="220%">
+              <feGaussianBlur stdDeviation="5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <clipPath id="clip-main-a"><rect x="0" y="0" width="160" height="42"/></clipPath>
+            <clipPath id="clip-top-a"><rect x="0" y="0" width="160" height="14"/></clipPath>
+            <clipPath id="clip-mid-a"><rect x="0" y="14" width="160" height="10"/></clipPath>
+          </defs>
+          <text x="2" y="34" font-family="'Bebas Neue', sans-serif" font-size="38"
+            fill="#ff1a1a" opacity="0.25" filter="url(#glow2-a)">MARV</text>
+          <g clip-path="url(#clip-main-a)">
+            <text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38"
+              fill="#ff1a1a" filter="url(#glow-a)" letter-spacing="2">MARV</text>
+          </g>
+          <g clip-path="url(#clip-top-a)">
+            <text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38"
+              fill="#ff6b6b" letter-spacing="2" opacity="0">
+              <animate attributeName="opacity" values="0;0;1;0;0;0;1;0" dur="4s" repeatCount="indefinite"/>
+              <animateTransform attributeName="transform" type="translate"
+                values="0,0;3,0;-2,0;0,0" dur="4s" repeatCount="indefinite"/>
+              MARV
+            </text>
+          </g>
+          <g clip-path="url(#clip-mid-a)">
+            <text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38"
+              fill="#7b0d0d" letter-spacing="2" opacity="0">
+              <animate attributeName="opacity" values="0;0;0;1;0;0;0;1;0" dur="5.5s" repeatCount="indefinite"/>
+              <animateTransform attributeName="transform" type="translate"
+                values="0,0;-4,0;2,0;0,0" dur="5.5s" repeatCount="indefinite"/>
+              MARV
+            </text>
+          </g>
+          <rect x="0" y="0" width="160" height="1.5" fill="rgba(255,26,26,0.55)">
+            <animateTransform attributeName="transform" type="translate"
+              values="0,-5;0,48;0,-5" dur="3s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0;0.9;0" dur="3s" repeatCount="indefinite"/>
+          </rect>
+        </svg>
+        <div class="auth-logo-sub">Realtime AI Transform</div>
+      </div>
+
+      <!-- LOGIN CARD -->
+      <div class="auth-card">
+        <div class="auth-heading">Access Portal</div>
+        <div class="auth-sub">Enter your credentials to continue</div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="auth-email">Email Address</label>
+          <input class="auth-input" type="email" id="auth-email"
+            placeholder="you@example.com" autocomplete="email" spellcheck="false" />
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="auth-password">Access Code</label>
+          <input class="auth-input" type="password" id="auth-password"
+            placeholder="MARV-XXXX-XXXX" autocomplete="current-password" spellcheck="false" />
+        </div>
+
+        <button class="auth-btn" id="auth-submit">ENTER MARV</button>
+
+        <div class="auth-error" id="auth-error"></div>
+      </div>
+
+      <!-- GO PRO BANNER -->
+      <div class="auth-pro-banner" id="pro-banner">
+        <div class="pro-icon">👑</div>
+        <div class="pro-text">
+          <div class="pro-title">GO PRO</div>
+          <div class="pro-tagline">Unlock unlimited usage &amp; full access</div>
+        </div>
+        <div class="pro-arrow">›</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       RIGHT SIDE PILL NAV
+  ══════════════════════════════════════════ -->
+  <div id="side-nav">
+    <button class="side-nav-btn" id="help-btn" data-tip="HELP">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="10"/>
+        <path stroke-linecap="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+        <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+      </svg>
+    </button>
+    <div class="side-nav-divider"></div>
+    <button class="side-nav-btn" id="logout-btn" data-tip="LOG OUT">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       HELP MODAL
+  ══════════════════════════════════════════ -->
+  <div id="help-modal-backdrop">
+    <div id="help-modal">
+      <div class="help-modal-header">
+        <div class="help-modal-title">
+          <span>?</span> Documentation
+        </div>
+        <button class="help-modal-close" id="help-modal-close">✕</button>
+      </div>
+      <div class="help-modal-body">
+
+        <!-- SWAP THIS: replace placeholder with:
+          <iframe src="./help.pdf" width="100%" height="100%"
+            style="border:none;display:block;"
+            title="MARV Documentation">
+          </iframe>
+        when help.pdf is ready -->
+
+        <div class="help-placeholder">
+          <div class="help-placeholder-icon">📄</div>
+          <div class="help-placeholder-title">Documentation Coming Soon</div>
+          <div class="help-placeholder-sub">
+            We're preparing the MARV user guide.<br>
+            Check back soon for full documentation.
+          </div>
+          <div class="help-placeholder-badge">Being Prepared</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <script>
     // ── DEVICE DETECTION & FORMAT LOCK ──────────────────────────
     (function() {
@@ -873,6 +1394,185 @@
     })();
   </script>
   <script type="module" src="index.js"></script>
+
+  <!-- ══════════════════════════════════════════
+       AUTH SYSTEM
+  ══════════════════════════════════════════ -->
+  <script type="module">
+    import { AUTHORIZED_DEVICES } from './auth.js';
+
+    // ── FINGERPRINT ──────────────────────────────────────────
+    async function getFingerprint() {
+      const parts = [];
+
+      // Screen
+      parts.push(`${screen.width}x${screen.height}x${screen.colorDepth}`);
+
+      // Platform / UA
+      parts.push(navigator.platform || '');
+      parts.push(navigator.userAgent || '');
+      parts.push(Intl.DateTimeFormat().resolvedOptions().timeZone || '');
+
+      // Canvas fingerprint
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#ff1a1a';
+        ctx.fillText('MARV-fp', 2, 2);
+        parts.push(canvas.toDataURL());
+      } catch(e) {}
+
+      // GPU info
+      try {
+        const gl = document.createElement('canvas').getContext('webgl');
+        const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+        if (ext) {
+          parts.push(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));
+          parts.push(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL));
+        }
+      } catch(e) {}
+
+      // Hash it
+      const raw = parts.join('||');
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    // ── STORAGE KEYS ─────────────────────────────────────────
+    const SESSION_KEY     = 'marv_session';       // { email }
+    const FINGERPRINT_KEY = 'marv_fp';            // { email: fingerprint }
+
+    // ── SHOW/HIDE HELPERS ────────────────────────────────────
+    const authWall    = document.getElementById('auth-wall');
+    const sideNav     = document.getElementById('side-nav');
+    const userChip    = document.getElementById('user-chip');
+    const userDisplay = document.getElementById('user-email-display');
+
+    function showApp(email) {
+      authWall.classList.add('fade-out');
+      setTimeout(() => authWall.style.display = 'none', 650);
+      sideNav.style.display = 'flex';
+      userChip.style.display = 'flex';
+      userDisplay.textContent = email;
+    }
+
+    function showAuthWall() {
+      authWall.style.display = 'flex';
+      authWall.classList.remove('fade-out');
+      sideNav.style.display = 'none';
+      userChip.style.display = 'none';
+      localStorage.removeItem(SESSION_KEY);
+    }
+
+    // ── AUTH-TOAST (login page) ──────────────────────────────
+    let authToastTimer;
+    function showAuthToast(msg) {
+      const t = document.getElementById('auth-toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(authToastTimer);
+      authToastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── BOOT: check existing session ────────────────────────
+    (async function boot() {
+      const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      if (!session) return; // no session → show login (default)
+
+      // Check user still exists in auth list
+      const user = AUTHORIZED_DEVICES.find(u => u.email === session.email);
+      if (!user) { showAuthWall(); return; }
+
+      // Verify fingerprint silently
+      const fpStore = JSON.parse(localStorage.getItem(FINGERPRINT_KEY) || '{}');
+      const storedFp = fpStore[session.email];
+      if (!storedFp) { showAuthWall(); return; }
+
+      const currentFp = await getFingerprint();
+      if (currentFp !== storedFp) { showAuthWall(); return; }
+
+      showApp(session.email);
+    })();
+
+    // ── LOGIN SUBMIT ─────────────────────────────────────────
+    const emailInput = document.getElementById('auth-email');
+    const passInput  = document.getElementById('auth-password');
+    const submitBtn  = document.getElementById('auth-submit');
+    const errorDiv   = document.getElementById('auth-error');
+
+    function setError(msg) {
+      errorDiv.textContent = msg;
+      errorDiv.classList.add('show');
+    }
+    function clearError() {
+      errorDiv.classList.remove('show');
+    }
+
+    async function attemptLogin() {
+      clearError();
+      const email = emailInput.value.trim().toLowerCase();
+      const pass  = passInput.value.trim();
+
+      if (!email || !pass) { setError('Please enter your email and access code.'); return; }
+
+      // Find user
+      const user = AUTHORIZED_DEVICES.find(
+        u => u.email.toLowerCase() === email && u.password === pass
+      );
+      if (!user) { setError('Invalid email or access code.'); return; }
+
+      // Fingerprint check / register
+      const currentFp = await getFingerprint();
+      const fpStore   = JSON.parse(localStorage.getItem(FINGERPRINT_KEY) || '{}');
+
+      if (fpStore[user.email]) {
+        // Already registered — verify
+        if (fpStore[user.email] !== currentFp) {
+          setError('This access code is registered to another device. Contact admin for a new code.');
+          return;
+        }
+      } else {
+        // First login — register fingerprint
+        fpStore[user.email] = currentFp;
+        localStorage.setItem(FINGERPRINT_KEY, JSON.stringify(fpStore));
+      }
+
+      // Save session
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ email: user.email }));
+      showApp(user.email);
+    }
+
+    submitBtn.addEventListener('click', attemptLogin);
+    passInput.addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+    emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') passInput.focus(); });
+
+    // ── LOGOUT ───────────────────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem(SESSION_KEY);
+      showAuthWall();
+    });
+
+    // ── HELP MODAL ───────────────────────────────────────────
+    const backdrop  = document.getElementById('help-modal-backdrop');
+    const closeBtn  = document.getElementById('help-modal-close');
+
+    document.getElementById('help-btn').addEventListener('click', () => {
+      backdrop.classList.add('open');
+    });
+    closeBtn.addEventListener('click', () => {
+      backdrop.classList.remove('open');
+    });
+    backdrop.addEventListener('click', e => {
+      if (e.target === backdrop) backdrop.classList.remove('open');
+    });
+
+    // ── GO PRO BANNER ────────────────────────────────────────
+    document.getElementById('pro-banner').addEventListener('click', () => {
+      showAuthToast('Unlimited usage, no restrictions — Coming Soon 🚀');
+    });
+  </script>
 
 </body>
 </html>
