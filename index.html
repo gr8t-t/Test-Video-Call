@@ -1401,14 +1401,17 @@
   <script type="module">
     import { AUTHORIZED_DEVICES } from './auth.js';
 
-    // ── FINGERPRINT ──────────────────────────────────────────
+    // ── SESSION KEY (localStorage — persists login state only) ──
+    const SESSION_KEY = 'marv_session'; // { email }
+
+    // ── FINGERPRINT (generated client-side, verified server-side) ──
     async function getFingerprint() {
       const parts = [];
 
       // Screen
       parts.push(`${screen.width}x${screen.height}x${screen.colorDepth}`);
 
-      // Platform / UA
+      // Platform / UA / Timezone
       parts.push(navigator.platform || '');
       parts.push(navigator.userAgent || '');
       parts.push(Intl.DateTimeFormat().resolvedOptions().timeZone || '');
@@ -1434,17 +1437,49 @@
         }
       } catch(e) {}
 
-      // Hash it
+      // Hash everything into a single SHA-256 string
       const raw = parts.join('||');
       const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
       return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
-    // ── STORAGE KEYS ─────────────────────────────────────────
-    const SESSION_KEY     = 'marv_session';       // { email }
-    const FINGERPRINT_KEY = 'marv_fp';            // { email: fingerprint }
+    // ── VERCEL KV API CALLS ──────────────────────────────────
+    // All fingerprint state lives on the server (Vercel KV).
+    // localStorage only stores which email is currently logged in.
 
-    // ── SHOW/HIDE HELPERS ────────────────────────────────────
+    async function fpCheck(email, fingerprint) {
+      // Returns: "match" | "mismatch" | "new" | "error"
+      try {
+        const res = await fetch('/api/fingerprint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check', email, fingerprint })
+        });
+        if (!res.ok) return 'error';
+        const data = await res.json();
+        return data.status || 'error';
+      } catch(e) {
+        return 'error';
+      }
+    }
+
+    async function fpRegister(email, fingerprint) {
+      // Returns true on success, false on failure
+      try {
+        const res = await fetch('/api/fingerprint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'register', email, fingerprint })
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        return data.status === 'registered';
+      } catch(e) {
+        return false;
+      }
+    }
+
+    // ── SHOW / HIDE HELPERS ──────────────────────────────────
     const authWall    = document.getElementById('auth-wall');
     const sideNav     = document.getElementById('side-nav');
     const userChip    = document.getElementById('user-chip');
@@ -1466,7 +1501,7 @@
       localStorage.removeItem(SESSION_KEY);
     }
 
-    // ── AUTH-TOAST (login page) ──────────────────────────────
+    // ── AUTH-TOAST (login page only) ─────────────────────────
     let authToastTimer;
     function showAuthToast(msg) {
       const t = document.getElementById('auth-toast');
@@ -1476,27 +1511,7 @@
       authToastTimer = setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // ── BOOT: check existing session ────────────────────────
-    (async function boot() {
-      const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-      if (!session) return; // no session → show login (default)
-
-      // Check user still exists in auth list
-      const user = AUTHORIZED_DEVICES.find(u => u.email === session.email);
-      if (!user) { showAuthWall(); return; }
-
-      // Verify fingerprint silently
-      const fpStore = JSON.parse(localStorage.getItem(FINGERPRINT_KEY) || '{}');
-      const storedFp = fpStore[session.email];
-      if (!storedFp) { showAuthWall(); return; }
-
-      const currentFp = await getFingerprint();
-      if (currentFp !== storedFp) { showAuthWall(); return; }
-
-      showApp(session.email);
-    })();
-
-    // ── LOGIN SUBMIT ─────────────────────────────────────────
+    // ── LOGIN FORM HELPERS ───────────────────────────────────
     const emailInput = document.getElementById('auth-email');
     const passInput  = document.getElementById('auth-password');
     const submitBtn  = document.getElementById('auth-submit');
@@ -1505,47 +1520,89 @@
     function setError(msg) {
       errorDiv.textContent = msg;
       errorDiv.classList.add('show');
+      submitBtn.textContent = 'ENTER MARV';
+      submitBtn.disabled = false;
     }
     function clearError() {
       errorDiv.classList.remove('show');
     }
+    function setLoading(on) {
+      submitBtn.textContent = on ? 'VERIFYING…' : 'ENTER MARV';
+      submitBtn.disabled = on;
+    }
 
+    // ── BOOT: silently re-validate returning user ────────────
+    (async function boot() {
+      const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      if (!session) return; // no saved session → show login wall (default state)
+
+      // 1. Check email still exists in auth list
+      const user = AUTHORIZED_DEVICES.find(u => u.email === session.email);
+      if (!user) { showAuthWall(); return; }
+
+      // 2. Silently verify fingerprint against Vercel KV
+      const fp     = await getFingerprint();
+      const result = await fpCheck(session.email, fp);
+
+      if (result === 'match') {
+        showApp(session.email);
+      } else {
+        // Any non-match (mismatch, new, error) → force re-login
+        showAuthWall();
+      }
+    })();
+
+    // ── LOGIN SUBMIT ─────────────────────────────────────────
     async function attemptLogin() {
       clearError();
       const email = emailInput.value.trim().toLowerCase();
       const pass  = passInput.value.trim();
 
-      if (!email || !pass) { setError('Please enter your email and access code.'); return; }
+      if (!email || !pass) {
+        setError('Please enter your email and access code.');
+        return;
+      }
 
-      // Find user
+      // 1. Check credentials against auth.js
       const user = AUTHORIZED_DEVICES.find(
         u => u.email.toLowerCase() === email && u.password === pass
       );
-      if (!user) { setError('Invalid email or access code.'); return; }
-
-      // Fingerprint check / register
-      const currentFp = await getFingerprint();
-      const fpStore   = JSON.parse(localStorage.getItem(FINGERPRINT_KEY) || '{}');
-
-      if (fpStore[user.email]) {
-        // Already registered — verify
-        if (fpStore[user.email] !== currentFp) {
-          setError('This access code is registered to another device. Contact admin for a new code.');
-          return;
-        }
-      } else {
-        // First login — register fingerprint
-        fpStore[user.email] = currentFp;
-        localStorage.setItem(FINGERPRINT_KEY, JSON.stringify(fpStore));
+      if (!user) {
+        setError('Invalid email or access code.');
+        return;
       }
 
-      // Save session
+      // 2. Generate fingerprint and check against KV
+      setLoading(true);
+      const fp     = await getFingerprint();
+      const result = await fpCheck(user.email, fp);
+
+      if (result === 'mismatch') {
+        setError('This access code is registered to another device. Contact admin for a new code.');
+        return;
+      }
+
+      if (result === 'error') {
+        setError('Could not verify device. Please check your connection and try again.');
+        return;
+      }
+
+      if (result === 'new') {
+        // First time this email has ever logged in — register this device
+        const ok = await fpRegister(user.email, fp);
+        if (!ok) {
+          setError('Could not register device. Please try again.');
+          return;
+        }
+      }
+
+      // result === 'match' OR just registered → grant access
       localStorage.setItem(SESSION_KEY, JSON.stringify({ email: user.email }));
       showApp(user.email);
     }
 
     submitBtn.addEventListener('click', attemptLogin);
-    passInput.addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+    passInput.addEventListener('keydown',  e => { if (e.key === 'Enter') attemptLogin(); });
     emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') passInput.focus(); });
 
     // ── LOGOUT ───────────────────────────────────────────────
@@ -1555,8 +1612,8 @@
     });
 
     // ── HELP MODAL ───────────────────────────────────────────
-    const backdrop  = document.getElementById('help-modal-backdrop');
-    const closeBtn  = document.getElementById('help-modal-close');
+    const backdrop = document.getElementById('help-modal-backdrop');
+    const closeBtn = document.getElementById('help-modal-close');
 
     document.getElementById('help-btn').addEventListener('click', () => {
       backdrop.classList.add('open');
