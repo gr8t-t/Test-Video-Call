@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MARV — Realtime AI Video Transform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #060608;
+      --surface:      #0d0d10;
+      --surface2:     #111116;
+      --border:       #1f1f26;
+      --border2:      #2a2a35;
+      --neon:         #ff1a1a;
+      --neon-glow:    rgba(255,26,26,0.4);
+      --metallic:     #c0392b;
+      --dark-red:     #7b0d0d;
+      --deep-red:     #2d0505;
+      --text:         #f0f0f5;
+      --muted:        #55556a;
+      --muted2:       #38384a;
+      --radius:       10px;
+      --radius-lg:    16px;
+    }
+
+    html {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* ── GRAIN TEXTURE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999;
+      opacity: 0.5;
+    }
+
+    /* ── AMBIENT RED GLOW ── */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 500px;
+      background: radial-gradient(ellipse, rgba(255,26,26,0.07) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ══════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════ */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 36px;
+      height: 68px;
+      background: rgba(6,6,8,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-wrap {
+      display: flex; align-items: center; gap: 14px;
+    }
+
+    .marv-logo {
+      height: 38px;
+      overflow: visible;
+    }
+
+    .logo-signal {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .logo-signal-bar {
+      width: 3px; border-radius: 2px;
+      background: var(--neon);
+      box-shadow: 0 0 6px var(--neon);
+      animation: signal-pulse 1.4s ease-in-out infinite;
+    }
+    .logo-signal-bar:nth-child(1) { height: 8px;  animation-delay: 0s; }
+    .logo-signal-bar:nth-child(2) { height: 14px; animation-delay: 0.15s; }
+    .logo-signal-bar:nth-child(3) { height: 20px; animation-delay: 0.3s; }
+    .logo-signal-bar:nth-child(4) { height: 14px; animation-delay: 0.45s; }
+    .logo-signal-bar:nth-child(5) { height: 8px;  animation-delay: 0.6s; }
+    @keyframes signal-pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.25; }
+    }
+
+    .logo-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.22em;
+      color: var(--muted); text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ── STATUS BADGE ── */
+    #status-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.1em;
+      padding: 6px 14px; border-radius: 100px;
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--muted);
+      transition: all 0.3s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #status-badge .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted2); transition: all 0.3s;
+      flex-shrink: 0;
+    }
+    #status-badge.live {
+      color: var(--neon);
+      border-color: var(--neon);
+      background: rgba(255,26,26,0.06);
+      box-shadow: 0 0 20px rgba(255,26,26,0.12);
+    }
+    #status-badge.live .dot {
+      background: var(--neon);
+      box-shadow: 0 0 10px var(--neon);
+      animation: dot-pulse 1.4s infinite;
+    }
+    #status-badge.connecting { color: #ff8c42; border-color: #ff8c42; background: rgba(255,140,66,0.06); }
+    #status-badge.connecting .dot { background: #ff8c42; }
+    #status-badge.error { color: var(--neon); border-color: var(--dark-red); background: var(--deep-red); }
+    #status-badge.error .dot { background: var(--neon); }
+
+    @keyframes dot-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+    /* ══════════════════════════════════════════
+       MAIN WRAPPER
+    ══════════════════════════════════════════ */
+    .main {
+      position: relative; z-index: 1;
+      padding: 32px 36px 60px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* ── SECTION HEADING ── */
+    .section-heading {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .section-heading-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border2), transparent);
+    }
+    .section-heading-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ══════════════════════════════════════════
+       VIDEO PANELS
+    ══════════════════════════════════════════ */
+    .video-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .video-panel {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--border);
+      aspect-ratio: 16 / 9;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .video-panel.output-panel.active {
+      border-color: var(--neon);
+      box-shadow: 0 0 30px rgba(255,26,26,0.15), 0 0 1px var(--neon) inset;
+    }
+
+    .video-panel video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scaleX(-1);
+    }
+    .video-panel #output-video { transform: scaleX(-1); }
+
+    .panel-label {
+      position: absolute; top: 14px; left: 14px; z-index: 10;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 5px 10px; border-radius: 6px;
+      background: rgba(6,6,8,0.82); backdrop-filter: blur(10px);
+      color: var(--muted); border: 1px solid var(--border2);
+    }
+    .panel-label.live-label {
+      color: var(--neon); border-color: rgba(255,26,26,0.4);
+      background: rgba(255,26,26,0.08);
+    }
+    .live-dot {
+      display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--neon); margin-right: 6px;
+      box-shadow: 0 0 6px var(--neon);
+      animation: dot-pulse 1.4s infinite;
+      vertical-align: middle;
+    }
+
+    .res-badge {
+      position: absolute; bottom: 14px; right: 14px; z-index: 10;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem; letter-spacing: 0.1em;
+      padding: 4px 9px; border-radius: 5px;
+      background: rgba(6,6,8,0.75); backdrop-filter: blur(8px);
+      color: var(--muted2); border: 1px solid var(--border);
+    }
+
+    #billing-counter {
+      position: absolute; bottom: 14px; left: 14px; z-index: 10;
+      font-family: 'Space Mono', monospace; font-size: 0.6rem;
+      padding: 4px 10px; border-radius: 6px;
+      background: rgba(6,6,8,0.82); backdrop-filter: blur(8px);
+      color: var(--neon); border: 1px solid rgba(255,26,26,0.3);
+      display: none;
+    }
+
+    .video-placeholder {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      color: var(--muted2);
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--surface) 0px, var(--surface) 12px,
+        var(--bg) 12px, var(--bg) 24px
+      );
+    }
+    .video-placeholder svg { opacity: 0.18; }
+    .video-placeholder span { opacity: 0.45; }
+
+    /* ══════════════════════════════════════════
+       CONTROLS BELOW VIDEOS
+    ══════════════════════════════════════════ */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .controls-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 22px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--border2); }
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.15), transparent);
+    }
+
+    .card-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title-icon {
+      width: 18px; height: 18px; border-radius: 4px;
+      background: rgba(255,26,26,0.12);
+      border: 1px solid rgba(255,26,26,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px;
+    }
+
+    /* ── INPUTS ── */
+    input[type="text"], input[type="password"], textarea {
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: 10px 13px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.76rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    textarea:focus {
+      border-color: var(--neon);
+      box-shadow: 0 0 0 3px rgba(255,26,26,0.08);
+    }
+    textarea {
+      resize: vertical; min-height: 80px; line-height: 1.6;
+      font-family: 'Inter', sans-serif; font-size: 0.82rem;
+    }
+
+    /* ── PRESETS ── */
+    .presets { display: flex; gap: 7px; flex-wrap: wrap; }
+    .preset-btn {
+      flex: 1; min-width: 0;
+      padding: 9px 8px; border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: var(--bg); color: var(--muted);
+      font-family: 'Space Mono', monospace; font-size: 0.64rem;
+      letter-spacing: 0.04em; cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .preset-btn:hover { border-color: var(--metallic); color: var(--text); }
+    .preset-btn.active {
+      border-color: var(--neon); color: var(--neon);
+      background: rgba(255,26,26,0.07);
+      box-shadow: 0 0 12px rgba(255,26,26,0.08);
+    }
+
+    /* ── IMAGE UPLOAD ── */
+    .upload-zone {
+      border: 1.5px dashed var(--border2);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--metallic);
+      background: rgba(192,57,43,0.05);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-zone-inner {
+      pointer-events: none;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      color: var(--muted); font-size: 0.78rem;
+    }
+    .upload-zone-inner svg { opacity: 0.4; }
+    .upload-zone-inner strong { color: var(--text); font-weight: 600; }
+
+    #image-preview-wrap { display: none; position: relative; }
+    #image-preview {
+      width: 100%; border-radius: var(--radius);
+      display: block; border: 1px solid var(--border2);
+      max-height: 150px; object-fit: cover;
+    }
+    #remove-image {
+      position: absolute; top: 7px; right: 7px;
+      background: rgba(6,6,8,0.88); border: 1px solid var(--border2);
+      color: var(--neon); border-radius: 5px;
+      width: 24px; height: 24px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: all 0.15s;
+    }
+    #remove-image:hover { background: var(--neon); color: #000; }
+
+    /* ── ENHANCE TOGGLE ── */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 0;
+    }
+    .toggle-label { font-size: 0.84rem; color: var(--text); font-weight: 500; }
+    .toggle-sub { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+    .toggle { position: relative; width: 42px; height: 23px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; border-radius: 100px;
+      background: var(--border2); cursor: pointer; transition: background 0.2s;
+    }
+    .toggle input:checked + .toggle-track {
+      background: var(--neon);
+      box-shadow: 0 0 10px rgba(255,26,26,0.4);
+    }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 17px; height: 17px; border-radius: 50%;
+      background: #fff; transition: transform 0.2s;
+      pointer-events: none;
+    }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(19px); }
+
+    /* ── DEVICE LOCK NOTICE ── */
+    #device-lock-notice {
+      display: none;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.08em;
+      color: var(--neon);
+      padding: 7px 10px; border-radius: var(--radius);
+      background: rgba(255,26,26,0.06);
+      border: 1px solid rgba(255,26,26,0.2);
+      text-align: center; margin-bottom: 10px;
+    }
+    #device-lock-notice.show { display: block; }
+
+    /* ── FORMAT BUTTONS ── */
+    .format-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .format-btns {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 9px;
+    }
+    .format-btn {
+      padding: 12px 10px; border-radius: var(--radius);
+      border: 1px solid var(--border2); background: var(--bg);
+      color: var(--muted); font-family: 'Space Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.04em;
+      cursor: pointer; transition: all 0.18s;
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .format-btn:hover { border-color: var(--metallic); color: var(--text); }
+    .format-btn.active {
+      border-color: var(--neon); color: var(--neon);
+      background: rgba(255,26,26,0.07);
+      box-shadow: 0 0 14px rgba(255,26,26,0.08);
+    }
+    .format-btn .fmt-icon { font-size: 1.1rem; line-height: 1; }
+    .format-btn .fmt-size { font-size: 0.55rem; color: var(--muted); }
+    .format-btn.active .fmt-size { color: rgba(255,26,26,0.6); }
+    .format-btn.locked { opacity: 0.28; cursor: not-allowed; pointer-events: none; }
+
+    /* ── APPLY BUTTON ── */
+    #apply-btn {
+      width: 100%; padding: 12px;
+      background: rgba(255,26,26,0.08); border: 1px solid rgba(255,26,26,0.35);
+      color: var(--neon); border-radius: var(--radius);
+      font-family: 'Space Mono', monospace; font-size: 0.76rem; letter-spacing: 0.1em;
+      cursor: pointer; transition: all 0.18s; text-transform: uppercase;
+      margin-top: 14px;
+    }
+    #apply-btn:hover {
+      background: rgba(255,26,26,0.15);
+      box-shadow: 0 0 20px rgba(255,26,26,0.15);
+    }
+    #apply-btn:disabled { opacity: 0.28; cursor: not-allowed; pointer-events: none; }
+
+    /* ══════════════════════════════════════════
+       MAIN CTA BUTTONS
+    ══════════════════════════════════════════ */
+    .cta-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    #start-btn, #stop-btn {
+      width: 100%;
+      padding: 22px 24px;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; letter-spacing: 0.16em;
+      transition: all 0.22s;
+      border: none;
+      text-transform: uppercase;
+      position: relative; overflow: hidden;
+    }
+
+    #start-btn {
+      background: linear-gradient(135deg, #ff1a1a 0%, #c0392b 60%, #7b0d0d 100%);
+      color: #fff;
+      box-shadow: 0 4px 32px rgba(255,26,26,0.35), 0 1px 0 rgba(255,255,255,0.1) inset;
+    }
+    #start-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+      border-radius: inherit;
+    }
+    #start-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(255,26,26,0.55), 0 1px 0 rgba(255,255,255,0.1) inset;
+    }
+    #start-btn:active:not(:disabled) { transform: translateY(0); }
+    #start-btn:disabled {
+      background: var(--surface2); color: var(--muted2);
+      box-shadow: none; cursor: not-allowed;
+    }
+
+    #stop-btn {
+      background: linear-gradient(135deg, #2d0505 0%, #4a0a0a 50%, #1a0202 100%);
+      color: #ff6b6b;
+      border: 1px solid rgba(192,57,43,0.4);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    #stop-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,26,26,0.08) 0%, transparent 60%);
+      border-radius: inherit;
+    }
+    #stop-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #5c1010 0%, #7b1515 50%, #3d0808 100%);
+      color: #fff;
+      border-color: var(--neon);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255,26,26,0.25);
+    }
+    #stop-btn:active:not(:disabled) { transform: translateY(0); }
+    #stop-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+
+    /* ── SHORTCUT HINT ── */
+    .shortcut-hint {
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; color: var(--muted2);
+      letter-spacing: 0.08em;
+    }
+    .shortcut-hint kbd {
+      border: 1px solid var(--border2); border-radius: 3px;
+      padding: 1px 5px; font-size: 0.58rem;
+      background: var(--surface); color: var(--muted);
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1a0505; border: 1px solid rgba(255,26,26,0.4);
+      color: #ff8080; border-radius: var(--radius);
+      padding: 12px 22px; font-family: 'Space Mono', monospace; font-size: 0.74rem;
+      max-width: 440px; text-align: center; z-index: 10000;
+      transition: transform 0.35s cubic-bezier(.2,.8,.4,1), opacity 0.35s;
+      opacity: 0; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── DIVIDER ── */
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      .main { padding: 24px 20px 48px; }
+      header { padding: 0 20px; }
+      .controls-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 680px) {
+      .video-grid { grid-template-columns: 1fr; }
+      .controls-grid { grid-template-columns: 1fr; }
+      .controls-row { grid-template-columns: 1fr; }
+      .cta-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════ -->
+  <header>
+    <div class="logo-wrap">
+
+      <!-- SVG MARV LOGO with glitch + scan-line effect -->
+      <svg class="marv-logo" viewBox="0 0 160 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow2" x="-30%" y="-60%" width="160%" height="220%">
+            <feGaussianBlur stdDeviation="5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="clip-main"><rect x="0" y="0" width="160" height="42"/></clipPath>
+          <clipPath id="clip-top"><rect x="0" y="0" width="160" height="14"/></clipPath>
+          <clipPath id="clip-mid"><rect x="0" y="14" width="160" height="10"/></clipPath>
+        </defs>
+
+        <!-- Glow shadow layer -->
+        <text x="2" y="34" font-family="'Bebas Neue', sans-serif" font-size="38"
+          fill="#ff1a1a" opacity="0.25" filter="url(#glow2)">MARV</text>
+
+        <!-- Main text -->
+        <g clip-path="url(#clip-main)">
+          <text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38"
+            fill="#ff1a1a" filter="url(#glow)" letter-spacing="2">MARV</text>
+        </g>
+
+        <!-- Glitch slice top -->
+        <g clip-path="url(#clip-top)">
+          <text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38"
+            fill="#ff6b6b" letter-spacing="2" opacity="0">
+            <animate attributeName="opacity" values="0;0;1;0;0;0;1;0" dur="4s" repeatCount="indefinite"/>
+            <animateTransform attributeName="transform" type="translate"
+              values="0,0;3,0;-2,0;0,0" dur="4s" repeatCount="indefinite"/>
+            MARV
+          </text>
+        </g>
+
+        <!-- Glitch slice mid -->
+        <g clip-path="url(#clip-mid)">
+          <text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38"
+            fill="#7b0d0d" letter-spacing="2" opacity="0">
+            <animate attributeName="opacity" values="0;0;0;1;0;0;0;1;0" dur="5.5s" repeatCount="indefinite"/>
+            <animateTransform attributeName="transform" type="translate"
+              values="0,0;-4,0;2,0;0,0" dur="5.5s" repeatCount="indefinite"/>
+            MARV
+          </text>
+        </g>
+
+        <!-- Scan line -->
+        <rect x="0" y="0" width="160" height="1.5" fill="rgba(255,26,26,0.55)">
+          <animateTransform attributeName="transform" type="translate"
+            values="0,-5;0,48;0,-5" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;0.9;0" dur="3s" repeatCount="indefinite"/>
+        </rect>
+      </svg>
+
+      <!-- Signal bars + subtitle -->
+      <div>
+        <div class="logo-signal">
+          <div class="logo-signal-bar"></div>
+          <div class="logo-signal-bar"></div>
+          <div class="logo-signal-bar"></div>
+          <div class="logo-signal-bar"></div>
+          <div class="logo-signal-bar"></div>
+        </div>
+        <div class="logo-sub">Realtime AI Transform</div>
+      </div>
+    </div>
+
+    <div id="status-badge">
+      <span class="dot"></span>
+      <span id="status-text">IDLE</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════
+       MAIN
+  ══════════════════════════════════════════ -->
+  <div class="main">
+
+    <!-- VIDEO SECTION -->
+    <div class="section-heading">
+      <span class="section-heading-text">Live Feed</span>
+      <div class="section-heading-line"></div>
+      <span class="section-heading-text">1920 × 1080</span>
+    </div>
+
+    <div class="video-grid">
+      <!-- INPUT -->
+      <div class="video-panel">
+        <div class="panel-label">INPUT · WEBCAM</div>
+        <video id="input-video" autoplay muted playsinline></video>
+        <div id="input-placeholder" class="video-placeholder">
+          <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-width="1.2" stroke-linecap="round"
+              d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+          </svg>
+          <span>Camera inactive</span>
+        </div>
+        <div class="res-badge">1920 × 1080</div>
+      </div>
+
+      <!-- OUTPUT -->
+      <div class="video-panel output-panel" id="output-panel">
+        <div class="panel-label" id="output-label">OUTPUT · AI TRANSFORM</div>
+        <video id="output-video" autoplay muted playsinline></video>
+        <div id="output-placeholder" class="video-placeholder">
+          <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
+              d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+          </svg>
+          <span>Awaiting stream</span>
+        </div>
+        <div id="billing-counter">⏱ <span id="billing-secs">0</span>s billed</div>
+        <div class="res-badge">1920 × 1080</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS SECTION -->
+    <div class="section-heading">
+      <span class="section-heading-text">Controls</span>
+      <div class="section-heading-line"></div>
+    </div>
+
+    <!-- ROW 1: 3 cards -->
+    <div class="controls-grid">
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon">🔑</div>
+          Authentication
+        </div>
+        <input type="password" id="api-key"
+          placeholder="dct-••••••••••••••••••••••"
+          autocomplete="off" spellcheck="false" />
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon">✦</div>
+          Transform Prompt
+        </div>
+        <textarea id="prompt-input" rows="3"
+          placeholder="e.g. Transform me into the person in the reference image">Transform me into the person in the reference image.</textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon">⚡</div>
+          Quick Presets
+        </div>
+        <div class="presets">
+          <button class="preset-btn" data-prompt="Transform me into an anime character with large expressive eyes and vibrant hair. High quality animation style.">✦ Anime</button>
+          <button class="preset-btn" data-prompt="Transform me into a cyberpunk character with neon face implants, chrome accessories, and futuristic urban style.">⚡ Cyber</button>
+          <button class="preset-btn" data-prompt="Make me look photorealistic but enhance my features with cinematic lighting and natural skin texture.">◎ Real</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ROW 2: 2 cards -->
+    <div class="controls-row">
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon">🖼</div>
+          Reference Image
+          <span style="color:rgba(255,26,26,0.6);font-size:0.52rem;margin-left:2px;letter-spacing:0.1em">IDENTITY TRANSFER</span>
+        </div>
+
+        <div id="upload-zone" class="upload-zone">
+          <input type="file" id="image-upload" accept="image/*" />
+          <div class="upload-zone-inner">
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+            </svg>
+            <div><strong>Upload face image</strong></div>
+            <div style="font-size:0.66rem;color:var(--muted)">JPG, PNG, WEBP · drag & drop or click</div>
+          </div>
+        </div>
+
+        <div id="image-preview-wrap">
+          <img id="image-preview" alt="Reference" />
+          <button id="remove-image" title="Remove image">✕</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon">⚙</div>
+          Settings
+        </div>
+
+        <div class="toggle-row" style="margin-bottom:20px">
+          <div>
+            <div class="toggle-label">Enhance</div>
+            <div class="toggle-sub">Quality boost on reference image</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="enhance-toggle" checked />
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+
+        <hr class="divider" style="margin-bottom:18px" />
+
+        <div class="format-label">Output Format</div>
+        <div id="device-lock-notice"></div>
+        <div class="format-btns">
+          <button class="format-btn active" id="fmt-laptop" data-format="laptop">
+            <span class="fmt-icon">💻</span>
+            <span>Laptop</span>
+            <span class="fmt-size">1280 × 720</span>
+          </button>
+          <button class="format-btn" id="fmt-mobile" data-format="mobile">
+            <span class="fmt-icon">📱</span>
+            <span>Mobile</span>
+            <span class="fmt-size">1080 × 1920</span>
+          </button>
+        </div>
+
+        <button id="apply-btn" disabled>⟳ Apply Settings</button>
+      </div>
+
+    </div>
+
+    <!-- CTA BUTTONS -->
+    <div class="cta-row">
+      <button id="start-btn">▶ &nbsp;Start Stream</button>
+      <button id="stop-btn" disabled>■ &nbsp;Stop Stream</button>
+    </div>
+
+    <div class="shortcut-hint">Press <kbd>Q</kbd> to stop stream</div>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // ── DEVICE DETECTION & FORMAT LOCK ──────────────────────────
+    (function() {
+      const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || (navigator.maxTouchPoints > 1 && /MacIntel/.test(navigator.platform))
+        || window.innerWidth <= 768;
+
+      const laptopBtn = document.getElementById("fmt-laptop");
+      const mobileBtn = document.getElementById("fmt-mobile");
+      const notice    = document.getElementById("device-lock-notice");
+
+      if (isMobile) {
+        mobileBtn.classList.add("active");
+        laptopBtn.classList.remove("active");
+        laptopBtn.classList.add("locked");
+        notice.textContent = "📱 Mobile detected — Mobile View auto-selected";
+        notice.classList.add("show");
+        window.__forcedFormat = "mobile";
+      } else {
+        laptopBtn.classList.add("active");
+        mobileBtn.classList.remove("active");
+        mobileBtn.classList.add("locked");
+        notice.textContent = "💻 Laptop detected — Laptop View auto-selected";
+        notice.classList.add("show");
+        window.__forcedFormat = "laptop";
+      }
+
+      // Output panel glow when live
+      const outputPanel = document.getElementById("output-panel");
+      const outputLabel = document.getElementById("output-label");
+      const outputVid   = document.getElementById("output-video");
+
+      function checkLive() {
+        if (outputVid && outputVid.srcObject) {
+          outputPanel.classList.add("active");
+          outputLabel.classList.add("live-label");
+          outputLabel.innerHTML = '<span class="live-dot"></span>LIVE · AI OUTPUT';
+        } else {
+          outputPanel.classList.remove("active");
+          outputLabel.classList.remove("live-label");
+          outputLabel.textContent = 'OUTPUT · AI TRANSFORM';
+        }
+      }
+      setInterval(checkLive, 800);
+    })();
+  </script>
+  <script type="module" src="index.js"></script>
+
+</body>
+</html>
