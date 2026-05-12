@@ -11,5 +11,6 @@ export const AUTHORIZED_DEVICES = [
   { email: "gerrymolloy087@gmail.com",  password: "MARV-B3T8-W1NO", label: "John's Laptop" },
   { email: "andyjason87@gmail.com",  password: "MARV-B3T8-X1N2", label: "John's Laptop" },
   { email: "omonosas35@gmail.com",  password: "MARV-B3T8-X1T3", label: "John's Laptop" },
+  { email: "michaelolowookere25@gmail.com",  password: "MARV-B669-X1T3", label: "John's Laptop" },
   { email: "sangwai12123@gmail.com", password: "MARV-B3T8-W1NZ", label: "SANGWAI PC"    },
 ];
