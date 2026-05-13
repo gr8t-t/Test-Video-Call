@@ -1524,6 +1524,37 @@
       heartbeatInterval = null;
     }
 
+    // ── REVOCATION WATCHDOG ──────────────────────────────────
+    // Checks every 30s if the logged-in user has been revoked.
+    // If they no longer exist in auth.js or Redis, they are
+    // immediately logged out — even while the app is open.
+    let watchdogInterval = null;
+    function startWatchdog(email) {
+      stopWatchdog();
+      async function check() {
+        // Static users in auth.js are never revoked via admin panel — skip check
+        const isStatic = AUTHORIZED_DEVICES.some(u => u.email === email);
+        if (isStatic) return;
+        // Redis user — verify they still exist
+        try {
+          const res = await fetch('/api/usercheck', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, sessionOnly: true })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (!data.exists) showAuthWall(); // revoked → kick out immediately
+          }
+        } catch(e) {}
+      }
+      watchdogInterval = setInterval(check, 30000);
+    }
+    function stopWatchdog() {
+      clearInterval(watchdogInterval);
+      watchdogInterval = null;
+    }
+
     // ── SHOW / HIDE HELPERS ──────────────────────────────────
     const authWall    = document.getElementById('auth-wall');
     const sideNav     = document.getElementById('side-nav');
@@ -1537,6 +1568,7 @@
       userChip.style.display = 'flex';
       userDisplay.textContent = email;
       startHeartbeat(email);
+      startWatchdog(email);
     }
 
     function showAuthWall() {
@@ -1546,6 +1578,7 @@
       userChip.style.display = 'none';
       localStorage.removeItem(SESSION_KEY);
       stopHeartbeat();
+      stopWatchdog();
     }
 
     // ── AUTH-TOAST (login page only) ─────────────────────────
