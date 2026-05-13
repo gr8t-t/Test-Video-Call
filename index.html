@@ -1407,16 +1407,10 @@
     // ── FINGERPRINT (generated client-side, verified server-side) ──
     async function getFingerprint() {
       const parts = [];
-
-      // Screen
       parts.push(`${screen.width}x${screen.height}x${screen.colorDepth}`);
-
-      // Platform / UA / Timezone
       parts.push(navigator.platform || '');
       parts.push(navigator.userAgent || '');
       parts.push(Intl.DateTimeFormat().resolvedOptions().timeZone || '');
-
-      // Canvas fingerprint
       try {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -1426,8 +1420,6 @@
         ctx.fillText('MARV-fp', 2, 2);
         parts.push(canvas.toDataURL());
       } catch(e) {}
-
-      // GPU info
       try {
         const gl = document.createElement('canvas').getContext('webgl');
         const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
@@ -1436,19 +1428,14 @@
           parts.push(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL));
         }
       } catch(e) {}
-
-      // Hash everything into a single SHA-256 string
       const raw = parts.join('||');
       const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
       return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
     // ── VERCEL KV API CALLS ──────────────────────────────────
-    // All fingerprint state lives on the server (Vercel KV).
-    // localStorage only stores which email is currently logged in.
 
     async function fpCheck(email, fingerprint) {
-      // Returns: "match" | "mismatch" | "new" | "error"
       try {
         const res = await fetch('/api/fingerprint', {
           method: 'POST',
@@ -1458,13 +1445,10 @@
         if (!res.ok) return 'error';
         const data = await res.json();
         return data.status || 'error';
-      } catch(e) {
-        return 'error';
-      }
+      } catch(e) { return 'error'; }
     }
 
     async function fpRegister(email, fingerprint) {
-      // Returns true on success, false on failure
       try {
         const res = await fetch('/api/fingerprint', {
           method: 'POST',
@@ -1474,9 +1458,70 @@
         if (!res.ok) return false;
         const data = await res.json();
         return data.status === 'registered';
-      } catch(e) {
-        return false;
+      } catch(e) { return false; }
+    }
+
+    // ── REDIS USER LOOKUP ────────────────────────────────────
+    // Fetches dynamic users added via the admin panel from Redis.
+    // Falls back gracefully if the call fails.
+    async function getRedisUsers() {
+      try {
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'list', password: '__public_list__' })
+        });
+        // admin API returns 401 for wrong password — we use a dedicated
+        // public-list endpoint instead (see note below)
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.users || [];
+      } catch(e) { return []; }
+    }
+
+    // ── PUBLIC USER LIST API ─────────────────────────────────
+    // Lightweight endpoint that returns only { email, password }
+    // pairs from Redis without requiring the admin password.
+    async function findUserAnywhere(email, pass) {
+      // 1. Check hardcoded auth.js first
+      const staticUser = AUTHORIZED_DEVICES.find(
+        u => u.email.toLowerCase() === email && u.password === pass
+      );
+      if (staticUser) return staticUser;
+
+      // 2. Check Redis dynamic users via a dedicated public endpoint
+      try {
+        const res = await fetch('/api/usercheck', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass })
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.found ? { email: data.email, password: pass } : null;
+      } catch(e) { return null; }
+    }
+
+    // ── HEARTBEAT ────────────────────────────────────────────
+    // Sends a ping every 25s so admin panel shows online status.
+    let heartbeatInterval = null;
+    function startHeartbeat(email) {
+      stopHeartbeat();
+      async function ping() {
+        try {
+          await fetch('/api/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+        } catch(e) {}
       }
+      ping(); // immediate first ping
+      heartbeatInterval = setInterval(ping, 25000);
+    }
+    function stopHeartbeat() {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
     }
 
     // ── SHOW / HIDE HELPERS ──────────────────────────────────
@@ -1491,6 +1536,7 @@
       sideNav.style.display = 'flex';
       userChip.style.display = 'flex';
       userDisplay.textContent = email;
+      startHeartbeat(email);
     }
 
     function showAuthWall() {
@@ -1499,6 +1545,7 @@
       sideNav.style.display = 'none';
       userChip.style.display = 'none';
       localStorage.removeItem(SESSION_KEY);
+      stopHeartbeat();
     }
 
     // ── AUTH-TOAST (login page only) ─────────────────────────
@@ -1523,9 +1570,7 @@
       submitBtn.textContent = 'ENTER MARV';
       submitBtn.disabled = false;
     }
-    function clearError() {
-      errorDiv.classList.remove('show');
-    }
+    function clearError() { errorDiv.classList.remove('show'); }
     function setLoading(on) {
       submitBtn.textContent = on ? 'VERIFYING…' : 'ENTER MARV';
       submitBtn.disabled = on;
@@ -1534,20 +1579,36 @@
     // ── BOOT: silently re-validate returning user ────────────
     (async function boot() {
       const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-      if (!session) return; // no saved session → show login wall (default state)
+      if (!session) return;
 
-      // 1. Check email still exists in auth list
-      const user = AUTHORIZED_DEVICES.find(u => u.email === session.email);
-      if (!user) { showAuthWall(); return; }
+      // Check email still valid in either source
+      const staticUser = AUTHORIZED_DEVICES.find(u => u.email === session.email);
+      let validUser = !!staticUser;
 
-      // 2. Silently verify fingerprint against Vercel KV
+      if (!validUser) {
+        // Check Redis dynamic users
+        try {
+          const res = await fetch('/api/usercheck', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: session.email, sessionOnly: true })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            validUser = !!data.exists;
+          }
+        } catch(e) {}
+      }
+
+      if (!validUser) { showAuthWall(); return; }
+
+      // Silently verify fingerprint
       const fp     = await getFingerprint();
       const result = await fpCheck(session.email, fp);
 
       if (result === 'match') {
         showApp(session.email);
       } else {
-        // Any non-match (mismatch, new, error) → force re-login
         showAuthWall();
       }
     })();
@@ -1563,17 +1624,17 @@
         return;
       }
 
-      // 1. Check credentials against auth.js
-      const user = AUTHORIZED_DEVICES.find(
-        u => u.email.toLowerCase() === email && u.password === pass
-      );
+      setLoading(true);
+
+      // Check credentials against both auth.js AND Redis
+      const user = await findUserAnywhere(email, pass);
       if (!user) {
         setError('Invalid email or access code.');
+        setLoading(false);
         return;
       }
 
-      // 2. Generate fingerprint and check against KV
-      setLoading(true);
+      // Generate fingerprint and check
       const fp     = await getFingerprint();
       const result = await fpCheck(user.email, fp);
 
@@ -1581,14 +1642,11 @@
         setError('This access code is registered to another device. Contact admin for a new code.');
         return;
       }
-
       if (result === 'error') {
         setError('Could not verify device. Please check your connection and try again.');
         return;
       }
-
       if (result === 'new') {
-        // First time this email has ever logged in — register this device
         const ok = await fpRegister(user.email, fp);
         if (!ok) {
           setError('Could not register device. Please try again.');
@@ -1596,7 +1654,7 @@
         }
       }
 
-      // result === 'match' OR just registered → grant access
+      // Grant access
       localStorage.setItem(SESSION_KEY, JSON.stringify({ email: user.email }));
       showApp(user.email);
     }
@@ -1615,15 +1673,9 @@
     const backdrop = document.getElementById('help-modal-backdrop');
     const closeBtn = document.getElementById('help-modal-close');
 
-    document.getElementById('help-btn').addEventListener('click', () => {
-      backdrop.classList.add('open');
-    });
-    closeBtn.addEventListener('click', () => {
-      backdrop.classList.remove('open');
-    });
-    backdrop.addEventListener('click', e => {
-      if (e.target === backdrop) backdrop.classList.remove('open');
-    });
+    document.getElementById('help-btn').addEventListener('click', () => { backdrop.classList.add('open'); });
+    closeBtn.addEventListener('click', () => { backdrop.classList.remove('open'); });
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
 
     // ── GO PRO BANNER ────────────────────────────────────────
     document.getElementById('pro-banner').addEventListener('click', () => {
