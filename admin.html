@@ -278,6 +278,15 @@
     }
     .revoke-btn:hover { background: rgba(255,26,26,0.18); border-color: var(--neon); color: #fff; }
 
+    .reset-btn {
+      padding: 6px 14px; border-radius: 7px;
+      border: 1px solid rgba(62,255,139,0.25); background: rgba(62,255,139,0.05);
+      color: #3eff8b; font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em;
+      cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    }
+    .reset-btn:hover { background: rgba(62,255,139,0.15); border-color: #3eff8b; color: #fff; }
+    .reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
     .empty-state {
       padding: 48px 24px; text-align: center;
       font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em;
@@ -603,6 +612,9 @@
           </td>
           <td class="date-cell">${formatDate(u.createdAt)}</td>
           <td>
+            <button class="reset-btn" data-email="${escHtml(u.email)}">Reset Device</button>
+          </td>
+          <td>
             <button class="revoke-btn" data-email="${escHtml(u.email)}">Revoke</button>
           </td>
         </tr>
@@ -617,6 +629,7 @@
               <th>Label</th>
               <th>Password</th>
               <th>Added</th>
+              <th>Device</th>
               <th></th>
             </tr>
           </thead>
@@ -632,6 +645,23 @@
       // Attach revoke buttons
       wrap.querySelectorAll('.revoke-btn[data-email]').forEach(btn => {
         btn.addEventListener('click', () => openConfirm(btn.dataset.email));
+      });
+
+      // Attach reset device buttons
+      wrap.querySelectorAll('.reset-btn[data-email]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const email = btn.dataset.email;
+          btn.disabled    = true;
+          btn.textContent = 'Resetting…';
+          try {
+            await api({ action: 'reset_fp', email });
+            showToast('✓ Device reset for ' + email + '. They can log in fresh.', true);
+          } catch(e) {
+            showToast('⚠ Reset failed: ' + e.message);
+          }
+          btn.disabled    = false;
+          btn.textContent = 'Reset Device';
+        });
       });
     }
 
