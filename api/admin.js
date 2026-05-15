@@ -104,6 +104,14 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── RESET FINGERPRINT ────────────────────────────────────
+    if (action === 'reset_fp') {
+      if (!email) return res.status(400).json({ error: 'Email required' });
+      const safeEmail = email.trim().toLowerCase();
+      try { await client.del(`marv_fp:${safeEmail}`); } catch (_) {}
+      return res.status(200).json({ ok: true });
+    }
+
     return res.status(400).json({ error: 'Unknown action' });
 
   } catch (err) {
