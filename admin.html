@@ -585,7 +585,7 @@
       const val = parseInt(document.getElementById('free-coins-input').value);
       if (isNaN(val) || val < 0) { showToast('⚠ Enter a valid amount.'); return; }
       const btn = document.getElementById('save-free-coins-btn'); btn.disabled = true; btn.textContent = 'SAVING…';
-      try { await coinsApi({ action:'set_free_coins', amount: val }); showToast('✓ Free coins updated.', true); }
+      try { await coinsApi({ action:'set_free_coins', freeCoins: val }); showToast('✓ Free coins updated.', true); }
       catch(e) { showToast('⚠ ' + e.message); }
       btn.disabled = false; btn.textContent = 'SAVE';
     });
