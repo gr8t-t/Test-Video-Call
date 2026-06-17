@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — MARV AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #060608;
+      --surface: #0d0d10;
+      --border:  #1f1f26;
+      --border2: #2a2a35;
+      --neon:    #ff1a1a;
+      --text:    #f0f0f5;
+      --muted:   #55556a;
+      --muted2:  #38384a;
+      --radius:  10px;
+    }
+
+    html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+
+    body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; position: relative; overflow: hidden;
+    }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+    body::after {
+      content: ''; position: fixed;
+      top: -200px; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 500px;
+      background: radial-gradient(ellipse, rgba(255,26,26,0.09) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .back-link {
+      position: fixed; top: 28px; left: 32px; z-index: 10;
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text); }
+    .back-link svg { opacity: 0.6; }
+
+    .login-wrap {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 440px;
+      display: flex; flex-direction: column; align-items: center; gap: 28px;
+    }
+
+    .logo-area { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .logo-sub  { font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); }
+
+    .login-card {
+      width: 100%; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 18px;
+      padding: 36px 32px 32px; position: relative; overflow: hidden;
+    }
+    .login-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.4), transparent);
+    }
+
+    .login-heading { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.1em; color: var(--text); margin-bottom: 6px; line-height: 1; }
+    .login-sub     { font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 28px; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .field input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: 12px 14px; color: var(--text);
+      font-family: 'Space Mono', monospace; font-size: 0.82rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input:focus { border-color: var(--neon); box-shadow: 0 0 0 3px rgba(255,26,26,0.08); }
+    .field input::placeholder { color: var(--muted2); }
+
+    .login-btn {
+      width: 100%; margin-top: 8px; padding: 15px 24px;
+      background: linear-gradient(135deg, #ff1a1a 0%, #c0392b 60%, #7b0d0d 100%);
+      border: none; border-radius: var(--radius); color: #fff;
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.2em;
+      cursor: pointer; transition: all 0.22s;
+      box-shadow: 0 4px 28px rgba(255,26,26,0.3);
+      position: relative; overflow: hidden;
+    }
+    .login-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%); }
+    .login-btn:hover   { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(255,26,26,0.5); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      display: none; margin-top: 14px; padding: 11px 14px; border-radius: 8px;
+      background: rgba(123,13,13,0.3); border: 1px solid rgba(255,26,26,0.3);
+      color: #ff6b6b; font-family: 'Space Mono', monospace; font-size: 0.68rem;
+      letter-spacing: 0.04em; line-height: 1.6; text-align: center;
+    }
+    .error-msg.show { display: block; }
+
+    .login-footer {
+      font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em;
+      color: var(--muted); text-align: center; line-height: 1.8;
+    }
+    .login-footer a { color: rgba(255,26,26,0.7); text-decoration: none; }
+    .login-footer a:hover { color: var(--neon); }
+
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1a0505; border: 1px solid rgba(255,26,26,0.4); color: #ff8080;
+      border-radius: var(--radius); padding: 13px 24px;
+      font-family: 'Space Mono', monospace; font-size: 0.74rem;
+      max-width: 380px; text-align: center; z-index: 60000;
+      transition: transform 0.35s cubic-bezier(.2,.8,.4,1), opacity 0.35s;
+      opacity: 0; box-shadow: 0 8px 30px rgba(0,0,0,0.5); pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    .marv-logo { height: 42px; overflow: visible; }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Back to Home
+  </a>
+
+  <div class="login-wrap">
+
+    <div class="logo-area">
+      <svg class="marv-logo" viewBox="0 0 160 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="glow2" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <clipPath id="clip-main"><rect x="0" y="0" width="160" height="42"/></clipPath>
+          <clipPath id="clip-top"><rect x="0" y="0" width="160" height="14"/></clipPath>
+          <clipPath id="clip-mid"><rect x="0" y="14" width="160" height="10"/></clipPath>
+        </defs>
+        <text x="2" y="34" font-family="'Bebas Neue', sans-serif" font-size="38" fill="#ff1a1a" opacity="0.25" filter="url(#glow2)">MARV</text>
+        <g clip-path="url(#clip-main)"><text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38" fill="#ff1a1a" filter="url(#glow)" letter-spacing="2">MARV</text></g>
+        <g clip-path="url(#clip-top)"><text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38" fill="#ff6b6b" letter-spacing="2" opacity="0"><animate attributeName="opacity" values="0;0;1;0;0;0;1;0" dur="4s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0,0;3,0;-2,0;0,0" dur="4s" repeatCount="indefinite"/>MARV</text></g>
+        <g clip-path="url(#clip-mid)"><text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38" fill="#7b0d0d" letter-spacing="2" opacity="0"><animate attributeName="opacity" values="0;0;0;1;0;0;0;1;0" dur="5.5s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0,0;-4,0;2,0;0,0" dur="5.5s" repeatCount="indefinite"/>MARV</text></g>
+        <rect x="0" y="0" width="160" height="1.5" fill="rgba(255,26,26,0.55)"><animateTransform attributeName="transform" type="translate" values="0,-5;0,48;0,-5" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.9;0" dur="3s" repeatCount="indefinite"/></rect>
+      </svg>
+      <div class="logo-sub">Realtime AI Transform</div>
+    </div>
+
+    <div class="login-card">
+      <div class="login-heading">Welcome Back</div>
+      <div class="login-sub">Sign in to your MARV AI account</div>
+
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label for="password">Access Code</label>
+        <input type="password" id="password" placeholder="MARV-XXXX-XXXX" autocomplete="current-password" spellcheck="false" />
+      </div>
+
+      <button class="login-btn" id="login-btn">SIGN IN</button>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <div class="login-footer">
+      Don't have an account? <a href="index.html#contact">Contact us</a> to get access.<br />
+      <a href="index.html">← Return to home</a>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script type="module">
+    const SESSION_KEY = 'marv_session';
+
+    // If already logged in, go straight to app
+    const existing = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if (existing?.email) window.location.href = 'app.html';
+
+    const emailInput = document.getElementById('email');
+    const passInput  = document.getElementById('password');
+    const loginBtn   = document.getElementById('login-btn');
+    const errorDiv   = document.getElementById('error-msg');
+
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function setError(msg) { errorDiv.textContent = msg; errorDiv.classList.add('show'); }
+    function clearError()  { errorDiv.classList.remove('show'); }
+    function setLoading(on) { loginBtn.textContent = on ? 'VERIFYING…' : 'SIGN IN'; loginBtn.disabled = on; }
+
+    async function attemptLogin() {
+      clearError();
+      const email = emailInput.value.trim().toLowerCase();
+      const pass  = passInput.value.trim();
+      if (!email || !pass) { setError('Please enter your email and access code.'); return; }
+
+      setLoading(true);
+
+      try {
+        const res  = await fetch('/api/usercheck', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass })
+        });
+        const data = await res.json();
+
+        if (!data.found) {
+          setError('Invalid email or access code. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        // Save session
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ email: data.email }));
+
+        // Store first-login info for welcome modal in app
+        if (data.firstLogin && data.coinsGranted) {
+          sessionStorage.setItem('marv_welcome', JSON.stringify({ coins: data.coinsGranted }));
+        }
+
+        // Redirect to app
+        window.location.href = 'app.html';
+
+      } catch (e) {
+        setError('Connection error. Please check your internet and try again.');
+        setLoading(false);
+      }
+    }
+
+    loginBtn.addEventListener('click', attemptLogin);
+    passInput.addEventListener('keydown',  e => { if (e.key === 'Enter') attemptLogin(); });
+    emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') passInput.focus(); });
+  </script>
+
+</body>
+</html>

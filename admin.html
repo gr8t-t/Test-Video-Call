@@ -3,374 +3,181 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MARV — Admin</title>
+  <title>MARV AI — Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:        #060608;
-      --surface:   #0d0d10;
-      --surface2:  #111116;
-      --border:    #1f1f26;
-      --border2:   #2a2a35;
-      --neon:      #ff1a1a;
-      --text:      #f0f0f5;
-      --muted:     #55556a;
-      --muted2:    #38384a;
-      --green:     #3eff8b;
-      --radius:    10px;
-      --radius-lg: 16px;
+      --bg: #060608; --surface: #0d0d10; --surface2: #111116;
+      --border: #1f1f26; --border2: #2a2a35;
+      --neon: #ff1a1a; --text: #f0f0f5; --muted: #55556a; --muted2: #38384a;
+      --green: #3eff8b; --radius: 10px; --radius-lg: 16px;
     }
-
     html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9999; opacity: 0.5; }
+    body::after { content: ''; position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 900px; height: 500px; background: radial-gradient(ellipse, rgba(255,26,26,0.07) 0%, transparent 70%); pointer-events: none; z-index: 0; }
 
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 9999; opacity: 0.5;
-    }
-    body::after {
-      content: ''; position: fixed;
-      top: -200px; left: 50%; transform: translateX(-50%);
-      width: 900px; height: 500px;
-      background: radial-gradient(ellipse, rgba(255,26,26,0.07) 0%, transparent 70%);
-      pointer-events: none; z-index: 0;
-    }
-
-    /* ══ LOGIN WALL ══ */
-    #login-wall {
-      position: fixed; inset: 0; z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--bg);
-    }
+    /* LOGIN WALL */
+    #login-wall { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: var(--bg); }
     #login-wall.hidden { display: none; }
-
     .login-box { width: 100%; max-width: 400px; padding: 20px; }
-
     .login-logo { text-align: center; margin-bottom: 28px; }
-    .login-logo-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 2.8rem; letter-spacing: 0.1em;
-      color: var(--neon); text-shadow: 0 0 30px rgba(255,26,26,0.5); line-height: 1;
-    }
-    .login-logo-sub {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase;
-      color: var(--muted); margin-top: 6px;
-    }
-
-    .login-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 32px 28px;
-      position: relative; overflow: hidden;
-    }
-    .login-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.5), transparent);
-    }
-    .login-heading {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 20px;
-    }
-
+    .login-logo-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; letter-spacing: 0.1em; color: var(--neon); text-shadow: 0 0 30px rgba(255,26,26,0.5); line-height: 1; }
+    .login-logo-sub { font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px 28px; position: relative; overflow: hidden; }
+    .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,26,26,0.5), transparent); }
+    .login-heading { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
     .field { margin-bottom: 14px; }
-    .field label {
-      display: block; font-family: 'Space Mono', monospace;
-      font-size: 0.55rem; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 7px;
-    }
-    .field input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border2);
-      border-radius: var(--radius); padding: 11px 13px;
-      color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.82rem;
-      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .field input:focus { border-color: var(--neon); box-shadow: 0 0 0 3px rgba(255,26,26,0.08); }
-
-    .login-btn {
-      width: 100%; margin-top: 8px; padding: 14px;
-      background: linear-gradient(135deg, #ff1a1a 0%, #c0392b 60%, #7b0d0d 100%);
-      border: none; border-radius: var(--radius); color: #fff;
-      font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.2em;
-      cursor: pointer; transition: all 0.22s; box-shadow: 0 4px 28px rgba(255,26,26,0.3);
-    }
+    .field label { display: block; font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .field input, .input-group input, .section-input { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius); padding: 11px 13px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.78rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .field input:focus, .input-group input:focus, .section-input:focus { border-color: var(--neon); box-shadow: 0 0 0 3px rgba(255,26,26,0.08); }
+    .field input::placeholder, .input-group input::placeholder, .section-input::placeholder { color: var(--muted2); }
+    .login-btn { width: 100%; margin-top: 8px; padding: 14px; background: linear-gradient(135deg, #ff1a1a 0%, #c0392b 60%, #7b0d0d 100%); border: none; border-radius: var(--radius); color: #fff; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.2em; cursor: pointer; transition: all 0.22s; box-shadow: 0 4px 28px rgba(255,26,26,0.3); }
     .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(255,26,26,0.5); }
-    .login-btn:active { transform: translateY(0); }
     .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    .login-error {
-      display: none; margin-top: 14px; padding: 10px 14px; border-radius: 8px;
-      background: rgba(123,13,13,0.3); border: 1px solid rgba(255,26,26,0.3);
-      color: #ff6b6b; font-family: 'Space Mono', monospace;
-      font-size: 0.68rem; letter-spacing: 0.04em; text-align: center;
-    }
+    .login-error { display: none; margin-top: 14px; padding: 10px 14px; border-radius: 8px; background: rgba(123,13,13,0.3); border: 1px solid rgba(255,26,26,0.3); color: #ff6b6b; font-family: 'Space Mono', monospace; font-size: 0.68rem; letter-spacing: 0.04em; text-align: center; }
     .login-error.show { display: block; }
 
-    /* ══ MAIN APP ══ */
+    /* MAIN APP */
     #app { display: none; position: relative; z-index: 1; }
     #app.visible { display: block; }
-
-    header {
-      position: sticky; top: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 36px; height: 64px;
-      background: rgba(6,6,8,0.93); backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
+    header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; height: 64px; background: rgba(6,6,8,0.93); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
     .header-left { display: flex; align-items: center; gap: 16px; }
-    .header-logo {
-      font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.1em;
-      color: var(--neon); text-shadow: 0 0 20px rgba(255,26,26,0.4); line-height: 1;
-    }
-    .header-badge {
-      font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase;
-      padding: 4px 10px; border-radius: 100px;
-      background: rgba(255,26,26,0.1); border: 1px solid rgba(255,26,26,0.3); color: var(--neon);
-    }
-    .logout-btn {
-      font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 8px 16px; border-radius: var(--radius);
-      border: 1px solid var(--border2); background: transparent; color: var(--muted);
-      cursor: pointer; transition: all 0.18s;
-    }
+    .header-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.1em; color: var(--neon); text-shadow: 0 0 20px rgba(255,26,26,0.4); line-height: 1; }
+    .header-badge { font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; background: rgba(255,26,26,0.1); border: 1px solid rgba(255,26,26,0.3); color: var(--neon); }
+    .logout-btn { font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border2); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.18s; }
     .logout-btn:hover { border-color: var(--neon); color: var(--neon); }
+    .main { max-width: 1200px; margin: 0 auto; padding: 36px 36px 80px; }
 
-    .main { max-width: 1100px; margin: 0 auto; padding: 36px 36px 80px; }
+    /* SECTION DIVIDER */
+    .section-divider { display: flex; align-items: center; gap: 16px; margin: 36px 0 24px; }
+    .section-divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border2), transparent); }
+    .section-divider-label { font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
 
-    /* ══ STATS ROW ══ */
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 32px; }
-    .stat-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 20px 22px;
-      position: relative; overflow: hidden;
-    }
-    .stat-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.15), transparent);
-    }
-    .stat-label {
-      font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
-    }
+    /* STATS ROW */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 22px; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,26,26,0.15), transparent); }
+    .stat-label { font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
     .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.06em; color: var(--text); line-height: 1; }
     .stat-value.green { color: var(--green); text-shadow: 0 0 20px rgba(62,255,139,0.3); }
+    .stat-value.gold { color: #ffb800; text-shadow: 0 0 20px rgba(255,184,0,0.3); }
 
-    /* ══ ADD CARD ══ */
-    .add-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 24px 26px;
-      margin-bottom: 24px; position: relative; overflow: hidden;
-    }
-    .add-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.2), transparent);
-    }
-    .card-title {
-      font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.22em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
-      display: flex; align-items: center; gap: 10px;
-    }
+    /* CARD */
+    .add-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 26px; margin-bottom: 16px; position: relative; overflow: hidden; }
+    .add-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,26,26,0.2), transparent); }
+    .card-title { font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
     .card-title-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon); box-shadow: 0 0 8px var(--neon); }
-
     .add-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
-
-    .input-group label {
-      display: block; font-family: 'Space Mono', monospace;
-      font-size: 0.55rem; letter-spacing: 0.16em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 7px;
-    }
-    .input-group input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border2);
-      border-radius: var(--radius); padding: 11px 13px;
-      color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.78rem;
-      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .input-group input:focus { border-color: var(--neon); box-shadow: 0 0 0 3px rgba(255,26,26,0.08); }
-    .input-group input::placeholder { color: var(--muted2); }
-
-    .add-btn {
-      padding: 11px 22px;
-      background: linear-gradient(135deg, #ff1a1a 0%, #c0392b 60%, #7b0d0d 100%);
-      border: none; border-radius: var(--radius); color: #fff;
-      font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.14em;
-      cursor: pointer; white-space: nowrap; transition: all 0.2s;
-      box-shadow: 0 4px 20px rgba(255,26,26,0.25);
-    }
+    .add-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+    .input-group label { display: block; font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .add-btn { padding: 11px 22px; background: linear-gradient(135deg, #ff1a1a 0%, #c0392b 60%, #7b0d0d 100%); border: none; border-radius: var(--radius); color: #fff; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.14em; cursor: pointer; white-space: nowrap; transition: all 0.2s; box-shadow: 0 4px 20px rgba(255,26,26,0.25); }
     .add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(255,26,26,0.45); }
     .add-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .save-btn { padding: 11px 22px; background: rgba(62,255,139,0.08); border: 1px solid rgba(62,255,139,0.3); border-radius: var(--radius); color: var(--green); font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.14em; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+    .save-btn:hover { background: rgba(62,255,139,0.15); box-shadow: 0 4px 20px rgba(62,255,139,0.15); }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ══ NEW USER RESULT BANNER ══ */
-    #new-user-banner {
-      display: none; margin-top: 16px;
-      background: rgba(6,20,12,0.8); border: 1px solid rgba(62,255,139,0.3);
-      border-radius: var(--radius); padding: 16px 20px;
-    }
+    /* NEW USER BANNER */
+    #new-user-banner { display: none; margin-top: 16px; background: rgba(6,20,12,0.8); border: 1px solid rgba(62,255,139,0.3); border-radius: var(--radius); padding: 16px 20px; }
     #new-user-banner.show { display: block; }
-    .banner-label {
-      font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em;
-      text-transform: uppercase; color: rgba(62,255,139,0.7); margin-bottom: 12px;
-    }
+    .banner-label { font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(62,255,139,0.7); margin-bottom: 12px; }
     .banner-creds { display: flex; gap: 12px; flex-wrap: wrap; }
-    .cred-chip {
-      display: flex; align-items: center; gap: 10px; flex: 1;
-      background: rgba(6,6,8,0.6); border: 1px solid var(--border2);
-      border-radius: 8px; padding: 8px 14px;
-      font-family: 'Space Mono', monospace; font-size: 0.8rem;
-    }
+    .cred-chip { display: flex; align-items: center; gap: 10px; flex: 1; background: rgba(6,6,8,0.6); border: 1px solid var(--border2); border-radius: 8px; padding: 8px 14px; font-family: 'Space Mono', monospace; font-size: 0.8rem; }
     .cred-chip-key { font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
     .cred-chip-val { color: var(--green); font-weight: 700; flex: 1; word-break: break-all; }
-    .copy-btn {
-      margin-left: auto; padding: 4px 10px;
-      background: transparent; border: 1px solid var(--border2);
-      border-radius: 5px; color: var(--muted); font-family: 'Space Mono', monospace;
-      font-size: 0.6rem; letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s; flex-shrink: 0;
-    }
+    .copy-btn { margin-left: auto; padding: 4px 10px; background: transparent; border: 1px solid var(--border2); border-radius: 5px; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
     .copy-btn:hover { border-color: var(--green); color: var(--green); }
     .copy-btn.copied { border-color: var(--green); color: var(--green); }
 
-    /* ══ USERS TABLE ══ */
-    .users-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); overflow: hidden;
-    }
-    .users-card-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
-    }
-    .refresh-btn {
-      font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border2);
-      background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s;
-    }
+    /* USERS TABLE */
+    .users-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .users-card-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+    .refresh-btn { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border2); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
     .refresh-btn:hover { border-color: var(--neon); color: var(--neon); }
-
     .users-table { width: 100%; border-collapse: collapse; }
-    .users-table th {
-      font-family: 'Space Mono', monospace; font-size: 0.53rem; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--muted); font-weight: 400; padding: 10px 24px; text-align: left;
-      border-bottom: 1px solid var(--border); background: var(--surface2);
-    }
-    .users-table td {
-      padding: 14px 24px; border-bottom: 1px solid var(--border);
-      font-size: 0.84rem; color: var(--text); vertical-align: middle;
-    }
+    .users-table th { font-family: 'Space Mono', monospace; font-size: 0.53rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 400; padding: 10px 24px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface2); }
+    .users-table td { padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 0.84rem; color: var(--text); vertical-align: middle; }
     .users-table tr:last-child td { border-bottom: none; }
     .users-table tr:hover td { background: rgba(255,26,26,0.02); }
-
     .online-dot { display: inline-flex; align-items: center; gap: 7px; font-family: 'Space Mono', monospace; font-size: 0.65rem; }
     .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .dot.online  { background: var(--green); box-shadow: 0 0 8px rgba(62,255,139,0.6); animation: blink 1.6s infinite; }
     .dot.offline { background: var(--muted2); }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
     .email-cell { font-family: 'Space Mono', monospace; font-size: 0.78rem; }
     .label-cell { color: var(--muted); font-size: 0.8rem; }
     .pass-cell  { display: flex; align-items: center; gap: 8px; font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); }
     .date-cell  { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--muted); }
-
-    .revoke-btn {
-      padding: 6px 14px; border-radius: 7px;
-      border: 1px solid rgba(255,26,26,0.3); background: rgba(255,26,26,0.06);
-      color: #ff6b6b; font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em;
-      cursor: pointer; transition: all 0.18s; white-space: nowrap;
-    }
+    .coins-cell { font-family: 'Space Mono', monospace; font-size: 0.78rem; color: var(--green); }
+    .revoke-btn { padding: 6px 14px; border-radius: 7px; border: 1px solid rgba(255,26,26,0.3); background: rgba(255,26,26,0.06); color: #ff6b6b; font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
     .revoke-btn:hover { background: rgba(255,26,26,0.18); border-color: var(--neon); color: #fff; }
-
-    .reset-btn {
-      padding: 6px 14px; border-radius: 7px;
-      border: 1px solid rgba(62,255,139,0.25); background: rgba(62,255,139,0.05);
-      color: #3eff8b; font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em;
-      cursor: pointer; transition: all 0.18s; white-space: nowrap;
-    }
+    .reset-btn { padding: 6px 14px; border-radius: 7px; border: 1px solid rgba(62,255,139,0.25); background: rgba(62,255,139,0.05); color: #3eff8b; font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
     .reset-btn:hover { background: rgba(62,255,139,0.15); border-color: #3eff8b; color: #fff; }
     .reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .empty-state {
-      padding: 48px 24px; text-align: center;
-      font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em;
-    }
-
-    .spinner {
-      display: inline-block; width: 16px; height: 16px;
-      border: 2px solid var(--border2); border-top-color: var(--neon);
-      border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px;
-    }
+    .empty-state { padding: 48px 24px; text-align: center; font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--neon); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ══ TOAST ══ */
-    #toast {
-      position: fixed; bottom: 28px; left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: #1a0505; border: 1px solid rgba(255,26,26,0.4);
-      color: #ff8080; border-radius: var(--radius);
-      padding: 12px 22px; font-family: 'Space Mono', monospace; font-size: 0.74rem;
-      max-width: 440px; text-align: center; z-index: 10000;
-      transition: transform 0.35s cubic-bezier(.2,.8,.4,1), opacity 0.35s;
-      opacity: 0; box-shadow: 0 8px 30px rgba(0,0,0,0.5); pointer-events: none;
-    }
+    /* PACKAGES LIST */
+    .pkg-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .pkg-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius); }
+    .pkg-row-info { flex: 1; display: flex; gap: 20px; font-family: 'Space Mono', monospace; font-size: 0.72rem; }
+    .pkg-row-info span { color: var(--muted); }
+    .pkg-row-info strong { color: var(--text); }
+    .del-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,26,26,0.25); background: rgba(255,26,26,0.05); color: #ff6b6b; font-family: 'Space Mono', monospace; font-size: 0.6rem; cursor: pointer; transition: all 0.15s; }
+    .del-btn:hover { background: rgba(255,26,26,0.15); border-color: var(--neon); }
+
+    /* REVENUE TABLE */
+    .revenue-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .revenue-table { width: 100%; border-collapse: collapse; }
+    .revenue-table th { font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 400; padding: 10px 20px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface2); }
+    .revenue-table td { padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 0.8rem; color: var(--text); vertical-align: middle; font-family: 'Space Mono', monospace; }
+    .revenue-table tr:last-child td { border-bottom: none; }
+    .revenue-table tr:hover td { background: rgba(62,255,139,0.02); }
+    .rev-amount { color: var(--green); font-weight: 700; }
+    .rev-infra  { color: var(--muted); font-size: 0.68rem; }
+    .net-tag { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 0.55rem; letter-spacing: 0.1em; }
+    .net-tag.trc20 { background: rgba(255,184,0,0.1); border: 1px solid rgba(255,184,0,0.3); color: #ffb800; }
+    .net-tag.erc20 { background: rgba(98,126,234,0.1); border: 1px solid rgba(98,126,234,0.3); color: #627eea; }
+    .net-tag.btc   { background: rgba(247,147,26,0.1); border: 1px solid rgba(247,147,26,0.3); color: #f7931a; }
+
+    /* SETTINGS GRID */
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .settings-row  { display: flex; align-items: flex-end; gap: 12px; }
+
+    /* TOAST */
+    #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a0505; border: 1px solid rgba(255,26,26,0.4); color: #ff8080; border-radius: var(--radius); padding: 12px 22px; font-family: 'Space Mono', monospace; font-size: 0.74rem; max-width: 440px; text-align: center; z-index: 10000; transition: transform 0.35s cubic-bezier(.2,.8,.4,1), opacity 0.35s; opacity: 0; box-shadow: 0 8px 30px rgba(0,0,0,0.5); pointer-events: none; }
     #toast.green-toast { background: rgba(6,20,12,0.95); border-color: rgba(62,255,139,0.4); color: var(--green); }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-    /* ══ CONFIRM MODAL ══ */
-    #confirm-modal {
-      display: none; position: fixed; inset: 0; z-index: 5000;
-      background: rgba(6,6,8,0.88); backdrop-filter: blur(8px);
-      align-items: center; justify-content: center; padding: 24px;
-    }
+    /* CONFIRM MODAL */
+    #confirm-modal { display: none; position: fixed; inset: 0; z-index: 5000; background: rgba(6,6,8,0.88); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 24px; }
     #confirm-modal.open { display: flex; }
-    .confirm-box {
-      background: var(--surface); border: 1px solid var(--border2);
-      border-radius: var(--radius-lg); padding: 32px 28px;
-      max-width: 380px; width: 100%; position: relative; overflow: hidden; text-align: center;
-    }
-    .confirm-box::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.5), transparent);
-    }
-    .confirm-icon { font-size: 2rem; margin-bottom: 12px; }
+    .confirm-box { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-lg); padding: 32px 28px; max-width: 380px; width: 100%; position: relative; overflow: hidden; text-align: center; }
+    .confirm-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,26,26,0.5), transparent); }
+    .confirm-icon  { font-size: 2rem; margin-bottom: 12px; }
     .confirm-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.1em; color: var(--neon); margin-bottom: 8px; }
-    .confirm-msg {
-      font-family: 'Space Mono', monospace; font-size: 0.68rem;
-      color: var(--muted); letter-spacing: 0.04em; line-height: 1.7; margin-bottom: 24px;
-    }
+    .confirm-msg   { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; line-height: 1.7; margin-bottom: 24px; }
     .confirm-email { color: var(--text); font-weight: 700; }
-    .confirm-btns { display: flex; gap: 10px; }
-    .confirm-cancel {
-      flex: 1; padding: 12px; background: transparent; border: 1px solid var(--border2);
-      border-radius: var(--radius); color: var(--muted); font-family: 'Space Mono', monospace;
-      font-size: 0.7rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s;
-    }
+    .confirm-btns  { display: flex; gap: 10px; }
+    .confirm-cancel { flex: 1; padding: 12px; background: transparent; border: 1px solid var(--border2); border-radius: var(--radius); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s; }
     .confirm-cancel:hover { border-color: var(--text); color: var(--text); }
-    .confirm-ok {
-      flex: 1; padding: 12px;
-      background: linear-gradient(135deg, #ff1a1a, #7b0d0d);
-      border: none; border-radius: var(--radius); color: #fff;
-      font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.14em;
-      cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(255,26,26,0.3);
-    }
+    .confirm-ok { flex: 1; padding: 12px; background: linear-gradient(135deg, #ff1a1a, #7b0d0d); border: none; border-radius: var(--radius); color: #fff; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.14em; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(255,26,26,0.3); }
     .confirm-ok:hover { box-shadow: 0 6px 28px rgba(255,26,26,0.5); }
     .confirm-ok:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    @media (max-width: 700px) {
-      .main { padding: 24px 16px 60px; }
-      header { padding: 0 16px; }
-      .stats-row { grid-template-columns: 1fr 1fr; }
-      .add-row { grid-template-columns: 1fr; }
-      .add-btn { width: 100%; }
-      .users-table th:nth-child(3), .users-table td:nth-child(3),
-      .users-table th:nth-child(5), .users-table td:nth-child(5) { display: none; }
-    }
+    @media(max-width:900px) { .settings-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:700px) { .main { padding: 24px 16px 60px; } header { padding: 0 16px; } .add-row,.add-row-3 { grid-template-columns: 1fr; } .add-btn,.save-btn { width: 100%; } .users-table th:nth-child(3),.users-table td:nth-child(3),.users-table th:nth-child(5),.users-table td:nth-child(5) { display: none; } }
   </style>
 </head>
 <body>
 
-  <!-- ══ LOGIN WALL ══ -->
+  <!-- LOGIN WALL -->
   <div id="login-wall">
     <div class="login-box">
       <div class="login-logo">
-        <div class="login-logo-title">MARV</div>
+        <div class="login-logo-title">MARV AI</div>
         <div class="login-logo-sub">Admin Console</div>
       </div>
       <div class="login-card">
@@ -385,11 +192,11 @@
     </div>
   </div>
 
-  <!-- ══ MAIN APP ══ -->
+  <!-- MAIN APP -->
   <div id="app">
     <header>
       <div class="header-left">
-        <div class="header-logo">MARV</div>
+        <div class="header-logo">MARV AI</div>
         <div class="header-badge">Admin Console</div>
       </div>
       <button class="logout-btn" id="logout-btn">Log Out</button>
@@ -397,28 +204,17 @@
 
     <div class="main">
 
-      <!-- STATS -->
+      <!-- ══ STATS ══ -->
       <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Total Users</div>
-          <div class="stat-value" id="stat-total">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Online Now</div>
-          <div class="stat-value green" id="stat-online">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Offline</div>
-          <div class="stat-value" id="stat-offline">—</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="stat-total">—</div></div>
+        <div class="stat-card"><div class="stat-label">Online Now</div><div class="stat-value green" id="stat-online">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value gold" id="stat-revenue">—</div></div>
+        <div class="stat-card"><div class="stat-label">Coin Packages</div><div class="stat-value" id="stat-packages">—</div></div>
       </div>
 
-      <!-- ADD USER -->
+      <!-- ══ ADD USER ══ -->
       <div class="add-card">
-        <div class="card-title">
-          <div class="card-title-dot"></div>
-          Add New User
-        </div>
+        <div class="card-title"><div class="card-title-dot"></div>Add New User</div>
         <div class="add-row">
           <div class="input-group">
             <label for="new-email">Email Address</label>
@@ -430,51 +226,134 @@
           </div>
           <button class="add-btn" id="add-btn">+ ADD USER</button>
         </div>
-
         <div id="new-user-banner">
           <div class="banner-label">✓ User Added — Share these credentials</div>
           <div class="banner-creds">
-            <div class="cred-chip">
-              <span class="cred-chip-key">Email</span>
-              <span class="cred-chip-val" id="banner-email">—</span>
-              <button class="copy-btn" id="copy-email-btn">Copy</button>
-            </div>
-            <div class="cred-chip">
-              <span class="cred-chip-key">Password</span>
-              <span class="cred-chip-val" id="banner-pass">—</span>
-              <button class="copy-btn" id="copy-pass-btn">Copy</button>
-            </div>
+            <div class="cred-chip"><span class="cred-chip-key">Email</span><span class="cred-chip-val" id="banner-email">—</span><button class="copy-btn" id="copy-email-btn">Copy</button></div>
+            <div class="cred-chip"><span class="cred-chip-key">Access Code</span><span class="cred-chip-val" id="banner-pass">—</span><button class="copy-btn" id="copy-pass-btn">Copy</button></div>
           </div>
         </div>
       </div>
 
-      <!-- USERS TABLE -->
+      <!-- ══ USERS TABLE ══ -->
       <div class="users-card">
         <div class="users-card-header">
-          <div class="card-title" style="margin-bottom:0">
-            <div class="card-title-dot"></div>
-            Authorized Users
-          </div>
+          <div class="card-title" style="margin-bottom:0"><div class="card-title-dot"></div>Authorized Users</div>
           <button class="refresh-btn" id="refresh-btn">⟳ Refresh</button>
         </div>
-        <div id="table-wrap">
-          <div class="empty-state"><span class="spinner"></span> Loading users…</div>
+        <div id="table-wrap"><div class="empty-state"><span class="spinner"></span> Loading users…</div></div>
+      </div>
+
+      <!-- ══ SETTINGS ══ -->
+      <div class="section-divider"><span class="section-divider-label">Coin &amp; Billing Settings</span><div class="section-divider-line"></div></div>
+
+      <div class="settings-grid">
+        <!-- Drain Rate -->
+        <div class="add-card" style="margin-bottom:0">
+          <div class="card-title"><div class="card-title-dot"></div>Drain Rate (coins/sec)</div>
+          <div class="settings-row">
+            <div class="input-group" style="flex:1">
+              <label for="drain-rate-video">Video Stream Rate</label>
+              <input type="number" id="drain-rate-video" class="section-input" placeholder="1.0" min="0.01" step="0.01" />
+            </div>
+            <button class="save-btn" id="save-drain-btn">SAVE</button>
+          </div>
         </div>
+
+        <!-- Free Coins Grant -->
+        <div class="add-card" style="margin-bottom:0">
+          <div class="card-title"><div class="card-title-dot"></div>Free Coins for New Users</div>
+          <div class="settings-row">
+            <div class="input-group" style="flex:1">
+              <label for="free-coins-input">Coins granted on first login</label>
+              <input type="number" id="free-coins-input" class="section-input" placeholder="2000" min="0" step="100" />
+            </div>
+            <button class="save-btn" id="save-free-coins-btn">SAVE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ WALLET ADDRESSES ══ -->
+      <div class="section-divider"><span class="section-divider-label">Crypto Wallet Addresses</span><div class="section-divider-line"></div></div>
+      <div class="add-card">
+        <div class="card-title"><div class="card-title-dot"></div>Payment Wallet Addresses</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="input-group">
+            <label for="wallet-trc20">USDT / USDC TRC20 (Tron)</label>
+            <input type="text" id="wallet-trc20" class="section-input" placeholder="TRX wallet address" />
+          </div>
+          <div class="input-group">
+            <label for="wallet-erc20">USDT / USDC ERC20 (Ethereum)</label>
+            <input type="text" id="wallet-erc20" class="section-input" placeholder="0x Ethereum wallet address" />
+          </div>
+          <div class="input-group">
+            <label for="wallet-btc">Bitcoin (BTC)</label>
+            <input type="text" id="wallet-btc" class="section-input" placeholder="Bitcoin wallet address" />
+          </div>
+          <div>
+            <button class="save-btn" id="save-wallets-btn">SAVE WALLETS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ COIN PACKAGES ══ -->
+      <div class="section-divider"><span class="section-divider-label">Coin Packages</span><div class="section-divider-line"></div></div>
+      <div class="add-card">
+        <div class="card-title"><div class="card-title-dot"></div>Add Coin Package</div>
+        <div class="add-row-3">
+          <div class="input-group">
+            <label for="pkg-coins">Coins</label>
+            <input type="number" id="pkg-coins" class="section-input" placeholder="3600" min="1" />
+          </div>
+          <div class="input-group">
+            <label for="pkg-naira">Price (₦ Naira)</label>
+            <input type="number" id="pkg-naira" class="section-input" placeholder="5000" min="1" />
+          </div>
+          <div class="input-group">
+            <label for="pkg-usd">Price (USD)</label>
+            <input type="number" id="pkg-usd" class="section-input" placeholder="3.00" min="0.01" step="0.01" />
+          </div>
+          <button class="add-btn" id="add-pkg-btn">+ ADD</button>
+        </div>
+        <div id="pkg-list" class="pkg-list"><div style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.7rem;padding:12px 0;text-align:center">Loading packages…</div></div>
+      </div>
+
+      <!-- ══ GRANT COINS TO USER ══ -->
+      <div class="section-divider"><span class="section-divider-label">Manual Coin Grant</span><div class="section-divider-line"></div></div>
+      <div class="add-card">
+        <div class="card-title"><div class="card-title-dot"></div>Grant Coins to User</div>
+        <div class="add-row">
+          <div class="input-group">
+            <label for="grant-email">User Email</label>
+            <input type="email" id="grant-email" class="section-input" placeholder="user@example.com" />
+          </div>
+          <div class="input-group">
+            <label for="grant-amount">Coins Amount</label>
+            <input type="number" id="grant-amount" class="section-input" placeholder="1000" min="1" />
+          </div>
+          <button class="add-btn" id="grant-btn">GRANT</button>
+        </div>
+      </div>
+
+      <!-- ══ REVENUE LOG ══ -->
+      <div class="section-divider"><span class="section-divider-label">Revenue Log</span><div class="section-divider-line"></div></div>
+      <div class="revenue-card">
+        <div class="users-card-header">
+          <div class="card-title" style="margin-bottom:0"><div class="card-title-dot" style="background:var(--green);box-shadow:0 0 8px var(--green)"></div>Payment History</div>
+          <button class="refresh-btn" id="refresh-revenue-btn">⟳ Refresh</button>
+        </div>
+        <div id="revenue-wrap"><div class="empty-state"><span class="spinner"></span> Loading revenue…</div></div>
       </div>
 
     </div>
   </div>
 
-  <!-- ══ CONFIRM MODAL ══ -->
+  <!-- CONFIRM MODAL -->
   <div id="confirm-modal">
     <div class="confirm-box">
       <div class="confirm-icon">⚠</div>
       <div class="confirm-title">Revoke Access</div>
-      <div class="confirm-msg">
-        This will permanently remove<br>
-        <span class="confirm-email" id="confirm-email-text">user@example.com</span><br><br>
-        and clear their device lock.<br>They will no longer be able to log in.
-      </div>
+      <div class="confirm-msg">This will permanently remove<br><span class="confirm-email" id="confirm-email-text">user@example.com</span><br><br>They will no longer be able to log in.</div>
       <div class="confirm-btns">
         <button class="confirm-cancel" id="confirm-cancel">Cancel</button>
         <button class="confirm-ok" id="confirm-ok">REVOKE</button>
@@ -482,18 +361,13 @@
     </div>
   </div>
 
-  <!-- ══ TOAST ══ -->
   <div id="toast"></div>
 
   <script>
-    // ─── STATE ────────────────────────────────────────────────
     let adminPassword = '';
-    let users         = [];
-    let revokeTarget  = null;
-    let toastTimer    = null;
-    let autoRefresh   = null;
+    let users = [], revokeTarget = null, toastTimer = null, autoRefresh = null;
 
-    // ─── TOAST ────────────────────────────────────────────────
+    // ── TOAST ────────────────────────────────────────────────────
     const toastEl = document.getElementById('toast');
     function showToast(msg, green = false) {
       toastEl.textContent = msg;
@@ -502,24 +376,29 @@
       toastTimer = setTimeout(() => { toastEl.classList.remove('show'); }, 3800);
     }
 
-    // ─── API HELPER ───────────────────────────────────────────
+    // ── API HELPERS ──────────────────────────────────────────────
     async function api(body) {
-      const res  = await fetch('/api/admin', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ ...body, password: adminPassword }),
-      });
+      const res  = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ...body, password: adminPassword }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+    async function coinsApi(body) {
+      const res  = await fetch('/api/coins', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ...body, password: adminPassword }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+    async function cryptoApi(body) {
+      const res  = await fetch('/api/crypto-payment', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ...body, password: adminPassword }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Request failed');
       return data;
     }
 
-    // ─── LOGIN ────────────────────────────────────────────────
-    const loginWall  = document.getElementById('login-wall');
-    const appEl      = document.getElementById('app');
-    const loginBtn   = document.getElementById('admin-login-btn');
-    const passInput  = document.getElementById('admin-pass');
-    const loginError = document.getElementById('login-error');
+    // ── LOGIN ────────────────────────────────────────────────────
+    const loginWall = document.getElementById('login-wall'), appEl = document.getElementById('app');
+    const loginBtn  = document.getElementById('admin-login-btn'), passInput = document.getElementById('admin-pass'), loginError = document.getElementById('login-error');
 
     async function tryLogin() {
       const pw = passInput.value.trim();
@@ -532,7 +411,7 @@
         await api({ action: 'list' });
         loginWall.classList.add('hidden');
         appEl.classList.add('visible');
-        loadUsers();
+        loadAll();
         startAutoRefresh();
       } catch (e) {
         adminPassword = '';
@@ -545,7 +424,6 @@
     loginBtn.addEventListener('click', tryLogin);
     passInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
 
-    // ─── LOGOUT ───────────────────────────────────────────────
     document.getElementById('logout-btn').addEventListener('click', () => {
       adminPassword = '';
       clearInterval(autoRefresh);
@@ -557,206 +435,261 @@
       loginBtn.textContent = 'ENTER CONSOLE';
     });
 
-    // ─── LOAD & RENDER USERS ──────────────────────────────────
+    // ── LOAD ALL ─────────────────────────────────────────────────
+    function loadAll() {
+      loadUsers();
+      loadSettings();
+      loadPackages();
+      loadWallets();
+      loadRevenue();
+    }
+
+    // ── USERS ────────────────────────────────────────────────────
     async function loadUsers() {
       try {
         const data = await api({ action: 'list' });
         users = data.users || [];
         renderUsers();
         updateStats();
-      } catch (e) {
-        showToast('⚠ Failed to load users: ' + e.message);
-      }
+      } catch (e) { showToast('⚠ Failed to load users: ' + e.message); }
     }
 
     function updateStats() {
-      const online  = users.filter(u => u.online).length;
-      document.getElementById('stat-total').textContent   = users.length;
-      document.getElementById('stat-online').textContent  = online;
-      document.getElementById('stat-offline').textContent = users.length - online;
+      const online = users.filter(u => u.online).length;
+      document.getElementById('stat-total').textContent  = users.length;
+      document.getElementById('stat-online').textContent = online;
+      document.getElementById('stat-packages').textContent = document.querySelectorAll('#pkg-list .pkg-row').length || '—';
     }
 
-    function formatDate(ts) {
-      if (!ts) return '—';
-      return new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    }
-
-    function escHtml(str) {
-      return String(str)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-        .replace(/'/g,'&#39;');
-    }
+    function formatDate(ts) { if (!ts) return '—'; return new Date(ts).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+    function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
     function renderUsers() {
       const wrap = document.getElementById('table-wrap');
-      if (!users.length) {
-        wrap.innerHTML = '<div class="empty-state">No users yet. Add one above.</div>';
-        return;
-      }
-      const rows = users.map(u => `
-        <tr>
-          <td>
-            <span class="online-dot">
-              <span class="dot ${u.online ? 'online' : 'offline'}"></span>
-              ${u.online ? 'Online' : 'Offline'}
-            </span>
-          </td>
-          <td class="email-cell">${escHtml(u.email)}</td>
-          <td class="label-cell">${escHtml(u.label || '—')}</td>
-          <td>
-            <div class="pass-cell">
-              <span>${escHtml(u.password)}</span>
-              <button class="copy-btn" data-copy="${escHtml(u.password)}">Copy</button>
-            </div>
-          </td>
-          <td class="date-cell">${formatDate(u.createdAt)}</td>
-          <td>
-            <button class="reset-btn" data-email="${escHtml(u.email)}">Reset Device</button>
-          </td>
-          <td>
-            <button class="revoke-btn" data-email="${escHtml(u.email)}">Revoke</button>
-          </td>
-        </tr>
-      `).join('');
+      if (!users.length) { wrap.innerHTML = '<div class="empty-state">No users yet. Add one above.</div>'; return; }
+      const rows = users.map(u => `<tr>
+        <td><span class="online-dot"><span class="dot ${u.online ? 'online' : 'offline'}"></span>${u.online ? 'Online' : 'Offline'}</span></td>
+        <td class="email-cell">${escHtml(u.email)}</td>
+        <td class="label-cell">${escHtml(u.label || '—')}</td>
+        <td><div class="pass-cell"><span>${escHtml(u.password)}</span><button class="copy-btn" data-copy="${escHtml(u.password)}">Copy</button></div></td>
+        <td class="coins-cell" id="coins-${escHtml(u.email).replace(/[@.]/g,'_')}">…</td>
+        <td class="date-cell">${formatDate(u.createdAt)}</td>
+        <td><button class="reset-btn" data-email="${escHtml(u.email)}">Reset Device</button></td>
+        <td><button class="revoke-btn" data-email="${escHtml(u.email)}">Revoke</button></td>
+      </tr>`).join('');
+      wrap.innerHTML = `<table class="users-table"><thead><tr><th>Status</th><th>Email</th><th>Label</th><th>Access Code</th><th>Coins</th><th>Added</th><th>Device</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
 
-      wrap.innerHTML = `
-        <table class="users-table">
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Email</th>
-              <th>Label</th>
-              <th>Password</th>
-              <th>Added</th>
-              <th>Device</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-
-      // Attach copy buttons
-      wrap.querySelectorAll('.copy-btn[data-copy]').forEach(btn => {
-        btn.addEventListener('click', () => copyText(btn.dataset.copy, btn));
-      });
-
-      // Attach revoke buttons
-      wrap.querySelectorAll('.revoke-btn[data-email]').forEach(btn => {
-        btn.addEventListener('click', () => openConfirm(btn.dataset.email));
-      });
-
-      // Attach reset device buttons
+      wrap.querySelectorAll('.copy-btn[data-copy]').forEach(btn => { btn.addEventListener('click', () => copyText(btn.dataset.copy, btn)); });
+      wrap.querySelectorAll('.revoke-btn[data-email]').forEach(btn => { btn.addEventListener('click', () => openConfirm(btn.dataset.email)); });
       wrap.querySelectorAll('.reset-btn[data-email]').forEach(btn => {
         btn.addEventListener('click', async () => {
-          const email = btn.dataset.email;
-          btn.disabled    = true;
-          btn.textContent = 'Resetting…';
-          try {
-            await api({ action: 'reset_fp', email });
-            showToast('✓ Device reset for ' + email + '. They can log in fresh.', true);
-          } catch(e) {
-            showToast('⚠ Reset failed: ' + e.message);
-          }
-          btn.disabled    = false;
-          btn.textContent = 'Reset Device';
+          const email = btn.dataset.email; btn.disabled = true; btn.textContent = 'Resetting…';
+          try { await api({ action: 'reset_fp', email }); showToast('✓ Device reset for ' + email, true); }
+          catch(e) { showToast('⚠ Reset failed: ' + e.message); }
+          btn.disabled = false; btn.textContent = 'Reset Device';
+        });
+      });
+      // Load coins for each user
+      users.forEach(async u => {
+        try {
+          const d = await coinsApi({ action: 'balance', email: u.email });
+          const cellId = 'coins-' + u.email.replace(/[@.]/g,'_');
+          const cell = document.getElementById(cellId);
+          if (cell) cell.textContent = Number(d.balance || 0).toFixed(0);
+        } catch (_) {}
+      });
+    }
+
+    // ── ADD USER ─────────────────────────────────────────────────
+    const addBtn = document.getElementById('add-btn'), newEmailEl = document.getElementById('new-email'), newLabelEl = document.getElementById('new-label');
+    const banner = document.getElementById('new-user-banner'), bannerEmail = document.getElementById('banner-email'), bannerPass = document.getElementById('banner-pass');
+    addBtn.addEventListener('click', async () => {
+      const email = newEmailEl.value.trim(), label = newLabelEl.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('⚠ Enter a valid email.'); newEmailEl.focus(); return; }
+      addBtn.disabled = true; addBtn.textContent = 'ADDING…'; banner.classList.remove('show');
+      try {
+        const data = await api({ action: 'add', email, label });
+        bannerEmail.textContent = data.user.email; bannerPass.textContent = data.user.password;
+        banner.classList.add('show'); newEmailEl.value = ''; newLabelEl.value = '';
+        await loadUsers(); showToast('✓ User added successfully.', true);
+      } catch (e) { showToast('⚠ ' + (e.message === 'User already exists' ? 'That email is already registered.' : e.message)); }
+      addBtn.disabled = false; addBtn.textContent = '+ ADD USER';
+    });
+    newEmailEl.addEventListener('keydown', e => { if (e.key === 'Enter') addBtn.click(); });
+
+    // ── COPY ─────────────────────────────────────────────────────
+    function copyText(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        if (btn) { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000); }
+      }).catch(() => showToast('⚠ Could not copy.'));
+    }
+    document.getElementById('copy-email-btn').addEventListener('click', function() { copyText(bannerEmail.textContent, this); });
+    document.getElementById('copy-pass-btn').addEventListener('click', function()  { copyText(bannerPass.textContent, this);  });
+
+    // ── REVOKE ────────────────────────────────────────────────────
+    const confirmModal = document.getElementById('confirm-modal'), confirmEmailT = document.getElementById('confirm-email-text');
+    const confirmOkBtn = document.getElementById('confirm-ok'), confirmCanBtn = document.getElementById('confirm-cancel');
+    function openConfirm(email) { revokeTarget = email; confirmEmailT.textContent = email; confirmModal.classList.add('open'); }
+    confirmCanBtn.addEventListener('click', () => { confirmModal.classList.remove('open'); revokeTarget = null; });
+    confirmModal.addEventListener('click', e => { if (e.target === confirmModal) { confirmModal.classList.remove('open'); revokeTarget = null; } });
+    confirmOkBtn.addEventListener('click', async () => {
+      if (!revokeTarget) return;
+      confirmOkBtn.textContent = 'REVOKING…'; confirmOkBtn.disabled = true;
+      try {
+        await api({ action: 'remove', email: revokeTarget });
+        confirmModal.classList.remove('open'); revokeTarget = null;
+        banner.classList.remove('show'); await loadUsers(); showToast('✓ User revoked.', true);
+      } catch (e) { showToast('⚠ Failed to revoke: ' + e.message); }
+      confirmOkBtn.textContent = 'REVOKE'; confirmOkBtn.disabled = false;
+    });
+    document.getElementById('refresh-btn').addEventListener('click', loadUsers);
+
+    // ── SETTINGS (drain rate + free coins) ───────────────────────
+    async function loadSettings() {
+      try {
+        const d = await coinsApi({ action: 'get_rates' });
+        if (d.rates?.video !== undefined) document.getElementById('drain-rate-video').value = d.rates.video;
+      } catch (_) {}
+      try {
+        const d = await coinsApi({ action: 'get_free_coins' });
+        if (d.freeCoins !== undefined) document.getElementById('free-coins-input').value = d.freeCoins;
+      } catch (_) {}
+    }
+
+    document.getElementById('save-drain-btn').addEventListener('click', async () => {
+      const video = parseFloat(document.getElementById('drain-rate-video').value);
+      if (isNaN(video) || video <= 0) { showToast('⚠ Enter a valid drain rate > 0'); return; }
+      const btn = document.getElementById('save-drain-btn'); btn.disabled = true; btn.textContent = 'SAVING…';
+      try { await coinsApi({ action: 'set_rates', rates: { video } }); showToast('✓ Drain rate updated.', true); }
+      catch (e) { showToast('⚠ ' + e.message); }
+      btn.disabled = false; btn.textContent = 'SAVE';
+    });
+
+    document.getElementById('save-free-coins-btn').addEventListener('click', async () => {
+      const val = parseInt(document.getElementById('free-coins-input').value);
+      if (isNaN(val) || val < 0) { showToast('⚠ Enter a valid coin amount.'); return; }
+      const btn = document.getElementById('save-free-coins-btn'); btn.disabled = true; btn.textContent = 'SAVING…';
+      try { await coinsApi({ action: 'set_free_coins', amount: val }); showToast('✓ Free coins grant updated.', true); }
+      catch (e) { showToast('⚠ ' + e.message); }
+      btn.disabled = false; btn.textContent = 'SAVE';
+    });
+
+    // ── WALLETS ──────────────────────────────────────────────────
+    async function loadWallets() {
+      try {
+        const d = await cryptoApi({ action: 'get_wallets' });
+        if (d.wallets?.trc20) document.getElementById('wallet-trc20').value = d.wallets.trc20;
+        if (d.wallets?.erc20) document.getElementById('wallet-erc20').value = d.wallets.erc20;
+        if (d.wallets?.btc)   document.getElementById('wallet-btc').value   = d.wallets.btc;
+      } catch (_) {}
+    }
+
+    document.getElementById('save-wallets-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('save-wallets-btn'); btn.disabled = true; btn.textContent = 'SAVING…';
+      try {
+        await cryptoApi({ action: 'set_wallets',
+          trc20: document.getElementById('wallet-trc20').value.trim(),
+          erc20: document.getElementById('wallet-erc20').value.trim(),
+          btc:   document.getElementById('wallet-btc').value.trim(),
+        });
+        showToast('✓ Wallet addresses saved.', true);
+      } catch (e) { showToast('⚠ ' + e.message); }
+      btn.disabled = false; btn.textContent = 'SAVE WALLETS';
+    });
+
+    // ── PACKAGES ─────────────────────────────────────────────────
+    let packages = [];
+    async function loadPackages() {
+      try {
+        const d = await coinsApi({ action: 'get_packages' });
+        packages = d.packages || [];
+        renderPackages();
+      } catch (_) {}
+    }
+
+    function renderPackages() {
+      const list = document.getElementById('pkg-list');
+      document.getElementById('stat-packages').textContent = packages.length;
+      if (!packages.length) { list.innerHTML = '<div style="color:var(--muted);font-family:\'Space Mono\',monospace;font-size:0.7rem;padding:12px 0;text-align:center">No packages yet. Add one above.</div>'; return; }
+      list.innerHTML = packages.map((p, i) => `
+        <div class="pkg-row">
+          <div class="pkg-row-info">
+            <div><span>Coins </span><strong>${Number(p.coins).toLocaleString()}</strong></div>
+            <div><span>₦</span><strong>${Number(p.priceNaira).toLocaleString()}</strong></div>
+            <div><span>$</span><strong>${p.priceUsd}</strong></div>
+            <div><span>~</span><strong>${Math.floor(p.coins/60)} min</strong></div>
+          </div>
+          <button class="del-btn" data-idx="${i}">Delete</button>
+        </div>`).join('');
+      list.querySelectorAll('.del-btn[data-idx]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = parseInt(btn.dataset.idx); btn.disabled = true; btn.textContent = '…';
+          const updated = packages.filter((_, i) => i !== idx);
+          try { await coinsApi({ action: 'set_packages', packages: updated }); packages = updated; renderPackages(); showToast('✓ Package deleted.', true); }
+          catch (e) { showToast('⚠ ' + e.message); btn.disabled = false; btn.textContent = 'Delete'; }
         });
       });
     }
 
-    // ─── ADD USER ─────────────────────────────────────────────
-    const addBtn      = document.getElementById('add-btn');
-    const newEmailEl  = document.getElementById('new-email');
-    const newLabelEl  = document.getElementById('new-label');
-    const banner      = document.getElementById('new-user-banner');
-    const bannerEmail = document.getElementById('banner-email');
-    const bannerPass  = document.getElementById('banner-pass');
-
-    addBtn.addEventListener('click', async () => {
-      const email = newEmailEl.value.trim();
-      const label = newLabelEl.value.trim();
-
-      if (!email) { showToast('⚠ Please enter an email address.'); newEmailEl.focus(); return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('⚠ Please enter a valid email address.'); newEmailEl.focus(); return; }
-
-      addBtn.disabled    = true;
-      addBtn.textContent = 'ADDING…';
-      banner.classList.remove('show');
-
+    document.getElementById('add-pkg-btn').addEventListener('click', async () => {
+      const coins = parseInt(document.getElementById('pkg-coins').value);
+      const naira = parseInt(document.getElementById('pkg-naira').value);
+      const usd   = parseFloat(document.getElementById('pkg-usd').value);
+      if (!coins || !naira || !usd) { showToast('⚠ Fill in all package fields.'); return; }
+      const btn = document.getElementById('add-pkg-btn'); btn.disabled = true; btn.textContent = '…';
+      const newPkg = { id: 'pkg_' + Date.now(), coins, priceNaira: naira, priceUsd: usd };
+      const updated = [...packages, newPkg];
       try {
-        const data = await api({ action: 'add', email, label });
-        bannerEmail.textContent = data.user.email;
-        bannerPass.textContent  = data.user.password;
-        banner.classList.add('show');
-        newEmailEl.value = '';
-        newLabelEl.value = '';
-        await loadUsers();
-        showToast('✓ User added successfully.', true);
-      } catch (e) {
-        showToast('⚠ ' + (e.message === 'User already exists' ? 'That email is already registered.' : e.message));
-      }
-
-      addBtn.disabled    = false;
-      addBtn.textContent = '+ ADD USER';
+        await coinsApi({ action: 'set_packages', packages: updated });
+        packages = updated; renderPackages();
+        document.getElementById('pkg-coins').value = ''; document.getElementById('pkg-naira').value = ''; document.getElementById('pkg-usd').value = '';
+        showToast('✓ Package added.', true);
+      } catch (e) { showToast('⚠ ' + e.message); }
+      btn.disabled = false; btn.textContent = '+ ADD';
     });
 
-    newEmailEl.addEventListener('keydown', e => { if (e.key === 'Enter') addBtn.click(); });
-
-    // ─── COPY ─────────────────────────────────────────────────
-    function copyText(text, btn) {
-      navigator.clipboard.writeText(text).then(() => {
-        if (btn) {
-          btn.textContent = 'Copied!';
-          btn.classList.add('copied');
-          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-        }
-      }).catch(() => showToast('⚠ Could not copy to clipboard.'));
-    }
-
-    document.getElementById('copy-email-btn').addEventListener('click', function() { copyText(bannerEmail.textContent, this); });
-    document.getElementById('copy-pass-btn').addEventListener('click', function()  { copyText(bannerPass.textContent, this);  });
-
-    // ─── REVOKE / CONFIRM ─────────────────────────────────────
-    const confirmModal  = document.getElementById('confirm-modal');
-    const confirmEmailT = document.getElementById('confirm-email-text');
-    const confirmOkBtn  = document.getElementById('confirm-ok');
-    const confirmCanBtn = document.getElementById('confirm-cancel');
-
-    function openConfirm(email) {
-      revokeTarget = email;
-      confirmEmailT.textContent = email;
-      confirmModal.classList.add('open');
-    }
-
-    confirmCanBtn.addEventListener('click', () => { confirmModal.classList.remove('open'); revokeTarget = null; });
-    confirmModal.addEventListener('click', e => { if (e.target === confirmModal) { confirmModal.classList.remove('open'); revokeTarget = null; } });
-
-    confirmOkBtn.addEventListener('click', async () => {
-      if (!revokeTarget) return;
-      confirmOkBtn.textContent = 'REVOKING…';
-      confirmOkBtn.disabled    = true;
+    // ── GRANT COINS ──────────────────────────────────────────────
+    document.getElementById('grant-btn').addEventListener('click', async () => {
+      const email  = document.getElementById('grant-email').value.trim();
+      const amount = parseInt(document.getElementById('grant-amount').value);
+      if (!email || !amount || amount <= 0) { showToast('⚠ Enter email and amount.'); return; }
+      const btn = document.getElementById('grant-btn'); btn.disabled = true; btn.textContent = 'GRANTING…';
       try {
-        await api({ action: 'remove', email: revokeTarget });
-        confirmModal.classList.remove('open');
-        revokeTarget = null;
-        banner.classList.remove('show');
-        await loadUsers();
-        showToast('✓ User revoked and removed.', true);
-      } catch (e) {
-        showToast('⚠ Failed to revoke: ' + e.message);
-      }
-      confirmOkBtn.textContent = 'REVOKE';
-      confirmOkBtn.disabled    = false;
+        await coinsApi({ action: 'topup', email, amount });
+        document.getElementById('grant-email').value = ''; document.getElementById('grant-amount').value = '';
+        showToast('✓ ' + amount + ' coins granted to ' + email, true);
+        loadUsers();
+      } catch (e) { showToast('⚠ ' + e.message); }
+      btn.disabled = false; btn.textContent = 'GRANT';
     });
 
-    // ─── REFRESH ──────────────────────────────────────────────
-    document.getElementById('refresh-btn').addEventListener('click', loadUsers);
-
-    function startAutoRefresh() {
-      clearInterval(autoRefresh);
-      autoRefresh = setInterval(loadUsers, 30000);
+    // ── REVENUE ──────────────────────────────────────────────────
+    async function loadRevenue() {
+      const wrap = document.getElementById('revenue-wrap');
+      try {
+        const d = await cryptoApi({ action: 'get_revenue' });
+        const log = d.revenue || [];
+        // Update total revenue stat
+        const totalUsd = log.reduce((s, r) => s + (r.amountUsd || 0), 0);
+        document.getElementById('stat-revenue').textContent = '$' + totalUsd.toFixed(2);
+        if (!log.length) { wrap.innerHTML = '<div class="empty-state">No payments yet.</div>'; return; }
+        const rows = log.slice(0, 50).map(r => `<tr>
+          <td class="date-cell">${formatDate(r.ts)}</td>
+          <td>${escHtml(r.email)}</td>
+          <td><span class="net-tag ${r.network || ''}">${(r.network || 'unknown').toUpperCase()}</span></td>
+          <td class="rev-amount">$${(r.amountUsd || 0).toFixed(2)}</td>
+          <td class="rev-infra">Infra: $${(r.infraCost || 0).toFixed(2)}<br>Net: $${(r.commission || 0).toFixed(2)}</td>
+          <td>${Number(r.coins || 0).toLocaleString()}</td>
+          <td style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--muted2);max-width:120px;overflow:hidden;text-overflow:ellipsis">${escHtml((r.txHash || '').slice(0,12))}…</td>
+        </tr>`).join('');
+        wrap.innerHTML = `<table class="revenue-table"><thead><tr><th>Date</th><th>User</th><th>Network</th><th>Amount</th><th>Split</th><th>Coins</th><th>TxHash</th></tr></thead><tbody>${rows}</tbody></table>`;
+      } catch (e) { wrap.innerHTML = '<div class="empty-state">Could not load revenue data.</div>'; }
     }
+
+    document.getElementById('refresh-revenue-btn').addEventListener('click', loadRevenue);
+
+    // ── AUTO REFRESH ─────────────────────────────────────────────
+    function startAutoRefresh() { clearInterval(autoRefresh); autoRefresh = setInterval(loadUsers, 30000); }
   </script>
 
 </body>

@@ -1,13 +1,16 @@
 // ══════════════════════════════════════════════════════════════
-//  MARV — USER CHECK API  (Vercel Serverless Function)
+//  MARV AI — USER CHECK API  (Vercel Serverless Function)
 //  Endpoint: /api/usercheck
-//  Called by index.html to verify Redis users at login/boot.
-//  Does NOT expose passwords or admin data.
+//  Handles: login verification, session boot check, heartbeat,
+//           first-login free coins grant
 // ══════════════════════════════════════════════════════════════
 
 import Redis from 'ioredis';
 
-const USERS_KEY = 'marv_users';
+const USERS_KEY          = 'marv_users';
+const FREE_COINS_KEY     = 'marv_free_coins_grant';
+const DEFAULT_FREE_COINS = 2000;
+const HEARTBEAT_PREFIX   = 'marv_hb:';
 
 let redis;
 function getRedis() {
@@ -23,9 +26,22 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')    return res.status(405).json({ error: 'Method not allowed' });
 
-  const { email, password, sessionOnly } = req.body || {};
-  if (!email) return res.status(400).json({ error: 'Email required' });
+  const { email, password, sessionOnly, action } = req.body || {};
 
+  // ── HEARTBEAT ────────────────────────────────────────────────
+  if (action === 'heartbeat') {
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    const safeEmail = email.trim().toLowerCase().replace(/[^a-z0-9@._-]/g, '');
+    try {
+      const client = getRedis();
+      await client.set(`${HEARTBEAT_PREFIX}${safeEmail}`, Date.now().toString(), 'EX', 60);
+      return res.status(200).json({ ok: true });
+    } catch (_) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+  }
+
+  if (!email) return res.status(400).json({ error: 'Email required' });
   const safeEmail = email.trim().toLowerCase();
 
   try {
@@ -33,17 +49,35 @@ export default async function handler(req, res) {
     const raw    = await client.get(USERS_KEY);
     const users  = raw ? JSON.parse(raw) : [];
 
-    // ── SESSION BOOT CHECK (just confirm user still exists) ──
+    // ── SESSION BOOT CHECK ───────────────────────────────────
     if (sessionOnly) {
       const exists = users.some(u => u.email === safeEmail);
       return res.status(200).json({ exists });
     }
 
-    // ── LOGIN CHECK (verify email + password match) ──────────
+    // ── LOGIN CHECK ──────────────────────────────────────────
     const user = users.find(u => u.email === safeEmail && u.password === password);
     if (!user) return res.status(200).json({ found: false });
 
-    return res.status(200).json({ found: true, email: user.email });
+    // ── FIRST LOGIN: grant free coins ────────────────────────
+    let firstLogin = false, coinsGranted = 0;
+    const firstLoginKey  = `marv_first_login:${safeEmail}`;
+    const alreadyGranted = await client.get(firstLoginKey);
+
+    if (!alreadyGranted) {
+      await client.set(firstLoginKey, '1');
+      const freeCoinsRaw  = await client.get(FREE_COINS_KEY);
+      const FREE_COINS    = freeCoinsRaw ? parseInt(freeCoinsRaw) : DEFAULT_FREE_COINS;
+      const coinKey       = `marv_coins:${safeEmail}`;
+      const val           = await client.get(coinKey);
+      const balance       = val ? parseFloat(val) : 0;
+      const newBalance    = parseFloat((balance + FREE_COINS).toFixed(4));
+      await client.set(coinKey, newBalance.toString());
+      firstLogin   = true;
+      coinsGranted = FREE_COINS;
+    }
+
+    return res.status(200).json({ found: true, email: user.email, firstLogin, coinsGranted });
 
   } catch (err) {
     console.error('Usercheck error:', err.message);
