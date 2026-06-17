@@ -135,8 +135,14 @@ window.addEventListener('marv:logged-in', async (e) => {
       body: JSON.stringify({ email: currentEmail })
     });
     const data = await res.json();
-    if (data.key) decartApiKey = data.key;
-  } catch (_) {}
+    if (data.key) {
+      decartApiKey = data.key;
+    } else {
+      showToast('⚠ Could not load API key: ' + (data.error || 'Unknown error. Check Vercel env vars.'), 6000);
+    }
+  } catch (err) {
+    showToast('⚠ API key fetch failed: ' + err.message, 6000);
+  }
 
   // Start heartbeat
   startHeartbeat(currentEmail);
