@@ -10,8 +10,13 @@ const ADMIN_PASSWORD     = process.env.ADMIN_PASSWORD || '09130370801Maviegr8@';
 const RATES_KEY          = 'marv_drain_rates';
 const PACKAGES_KEY       = 'marv_coin_packages';
 const FREE_COINS_KEY     = 'marv_free_coins_grant';
-const DEFAULT_FREE_COINS = 2000;
-const DEFAULT_RATES      = { video: 1.0 };
+const DEFAULT_FREE_COINS = 1200;
+const DEFAULT_RATES      = { video: 2.0 };
+const DEFAULT_PACKAGES   = [
+  { id: 'pkg_starter',  coins: 1200, priceNaira: 32000,  priceUsd: 20,  label: 'Starter'  },
+  { id: 'pkg_standard', coins: 3600, priceNaira: 88000,  priceUsd: 55,  label: 'Standard', featured: true },
+  { id: 'pkg_pro',      coins: 7200, priceNaira: 160000, priceUsd: 100, label: 'Pro'       },
+];
 
 let redis;
 function getRedis() {
@@ -100,7 +105,7 @@ export default async function handler(req, res) {
     // ── GET PACKAGES ─────────────────────────────────────────
     if (action === 'get_packages') {
       const raw      = await client.get(PACKAGES_KEY);
-      const packages = raw ? JSON.parse(raw) : [];
+      const packages = raw ? JSON.parse(raw) : DEFAULT_PACKAGES;
       return res.status(200).json({ packages });
     }
 
