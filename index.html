@@ -405,14 +405,14 @@
         if (!pkgs.length) { loading.textContent = 'Contact us for current pricing.'; return; }
         grid.innerHTML = pkgs.map((p, i) => {
           const isFeatured = p.featured || i === Math.floor(pkgs.length / 2);
-          const timeMin    = Math.floor(p.coins / 60);
+          const timeMin    = Math.floor(p.coins / 120);
           return `<div class="pricing-card${isFeatured ? ' featured' : ''}">
             ${isFeatured ? '<div class="pricing-badge">Most Popular</div>' : ''}
             <div class="pricing-coins">${Number(p.coins).toLocaleString()}</div>
             <div class="pricing-coins-label">Coins</div>
             <div class="pricing-price">&#x20A6;${Number(p.priceNaira).toLocaleString()}</div>
             <div class="pricing-usd">&#x2248; $${p.priceUsd} USD</div>
-            <div class="pricing-time">~<strong>${timeMin} minutes</strong><br>of streaming at 1 coin/sec</div>
+            <div class="pricing-time">~<strong>${timeMin} minutes</strong><br>of streaming at 2 coins/sec</div>
           </div>`;
         }).join('');
       } catch (_) {

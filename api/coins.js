@@ -13,9 +13,10 @@ const FREE_COINS_KEY     = 'marv_free_coins_grant';
 const DEFAULT_FREE_COINS = 1200;
 const DEFAULT_RATES      = { video: 2.0 };
 const DEFAULT_PACKAGES   = [
-  { id: 'pkg_starter',  coins: 1200, priceNaira: 32000,  priceUsd: 20,  label: 'Starter'  },
-  { id: 'pkg_standard', coins: 3600, priceNaira: 88000,  priceUsd: 55,  label: 'Standard', featured: true },
-  { id: 'pkg_pro',      coins: 7200, priceNaira: 160000, priceUsd: 100, label: 'Pro'       },
+  { id: 'pkg_starter',  coins: 720,  priceNaira: 16000,  priceUsd: 10,  label: 'Starter'  },
+  { id: 'pkg_standard', coins: 1680, priceNaira: 32000,  priceUsd: 20,  label: 'Standard' },
+  { id: 'pkg_pro',      coins: 4560, priceNaira: 88000,  priceUsd: 55,  label: 'Pro',      featured: true },
+  { id: 'pkg_elite',    coins: 8400, priceNaira: 160000, priceUsd: 100, label: 'Elite'     },
 ];
 
 let redis;
@@ -105,7 +106,8 @@ export default async function handler(req, res) {
     // ── GET PACKAGES ─────────────────────────────────────────
     if (action === 'get_packages') {
       const raw      = await client.get(PACKAGES_KEY);
-      const packages = raw ? JSON.parse(raw) : DEFAULT_PACKAGES;
+      const parsed   = raw ? JSON.parse(raw) : [];
+      const packages = parsed.length > 0 ? parsed : DEFAULT_PACKAGES;
       return res.status(200).json({ packages });
     }
 
