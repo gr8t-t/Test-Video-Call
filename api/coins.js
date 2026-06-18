@@ -77,10 +77,10 @@ export default async function handler(req, res) {
     // ── TOPUP ────────────────────────────────────────────────
     if (action === 'topup') {
       if (!safeEmail) return res.status(400).json({ error: 'Email required' });
-      if (!amount || isNaN(amount) || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
+      if (!amount || isNaN(amount) || amount === 0) return res.status(400).json({ error: 'Invalid amount' });
       const val        = await client.get(coinKey);
       const balance    = val ? parseFloat(val) : 0;
-      const newBalance = parseFloat((balance + parseFloat(amount)).toFixed(4));
+      const newBalance = parseFloat(Math.max(0, balance + parseFloat(amount)).toFixed(4));
       await client.set(coinKey, newBalance.toString());
       return res.status(200).json({ balance: newBalance });
     }
