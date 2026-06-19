@@ -1,16 +1,13 @@
 // ══════════════════════════════════════════════════════════════
 //  MARV AI — USER CHECK API  (Vercel Serverless Function)
 //  Endpoint: /api/usercheck
-//  Handles: login verification, session boot check, heartbeat,
-//           first-login free coins grant
+//  Handles: login verification, session boot check, heartbeat
 // ══════════════════════════════════════════════════════════════
 
 import Redis from 'ioredis';
 
-const USERS_KEY          = 'marv_users';
-const FREE_COINS_KEY     = 'marv_free_coins_grant';
-const DEFAULT_FREE_COINS = 2000;
-const HEARTBEAT_PREFIX   = 'marv_hb:';
+const USERS_KEY        = 'marv_users';
+const HEARTBEAT_PREFIX = 'marv_hb:';
 
 let redis;
 function getRedis() {
@@ -59,25 +56,7 @@ export default async function handler(req, res) {
     const user = users.find(u => u.email === safeEmail && u.password === password);
     if (!user) return res.status(200).json({ found: false });
 
-    // ── FIRST LOGIN: grant free coins ────────────────────────
-    let firstLogin = false, coinsGranted = 0;
-    const firstLoginKey  = `marv_first_login:${safeEmail}`;
-    const alreadyGranted = await client.get(firstLoginKey);
-
-    if (!alreadyGranted) {
-      await client.set(firstLoginKey, '1');
-      const freeCoinsRaw  = await client.get(FREE_COINS_KEY);
-      const FREE_COINS    = freeCoinsRaw ? parseInt(freeCoinsRaw) : DEFAULT_FREE_COINS;
-      const coinKey       = `marv_coins:${safeEmail}`;
-      const val           = await client.get(coinKey);
-      const balance       = val ? parseFloat(val) : 0;
-      const newBalance    = parseFloat((balance + FREE_COINS).toFixed(4));
-      await client.set(coinKey, newBalance.toString());
-      firstLogin   = true;
-      coinsGranted = FREE_COINS;
-    }
-
-    return res.status(200).json({ found: true, email: user.email, firstLogin, coinsGranted });
+    return res.status(200).json({ found: true, email: user.email });
 
   } catch (err) {
     console.error('Usercheck error:', err.message);
