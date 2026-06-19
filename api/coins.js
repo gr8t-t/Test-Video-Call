@@ -64,16 +64,18 @@ export default async function handler(req, res) {
     // ── DRAIN ────────────────────────────────────────────────
     if (action === 'drain') {
       if (!safeEmail) return res.status(400).json({ error: 'Email required' });
-      const rates   = await getDrainRates(client);
-      const rate    = rates.video;
-      const val     = await client.get(coinKey);
-      const balance = val ? parseFloat(val) : 0;
+      const rates    = await getDrainRates(client);
+      const rate     = rates.video;
+      const seconds  = Math.max(1, parseFloat(req.body.seconds || 1));
+      const toDrain  = parseFloat((rate * seconds).toFixed(4));
+      const val      = await client.get(coinKey);
+      const balance  = val ? parseFloat(val) : 0;
 
       if (balance <= 0) return res.status(402).json({ error: 'Insufficient coins', balance: 0 });
 
-      const newBalance = Math.max(0, parseFloat((balance - rate).toFixed(4)));
+      const newBalance = Math.max(0, parseFloat((balance - toDrain).toFixed(4)));
       await client.set(coinKey, newBalance.toString());
-      return res.status(200).json({ balance: newBalance, drained: rate });
+      return res.status(200).json({ balance: newBalance, drained: toDrain });
     }
 
     // ── TOPUP ────────────────────────────────────────────────

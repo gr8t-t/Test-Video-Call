@@ -104,12 +104,14 @@ async function loadCoins(email) {
   } catch (_) {}
 }
 
-async function drainCoins() {
+let lastBilledSeconds = 0;
+
+async function drainCoins(seconds = 1) {
   if (!currentEmail) return;
   try {
     const res = await fetch('/api/coins', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'drain', email: currentEmail, mode: 'video' })
+      body: JSON.stringify({ action: 'drain', email: currentEmail, mode: 'video', seconds })
     });
     if (res.status === 402) {
       showToast("⚠ You've run out of coins. Please top up to continue.");
@@ -513,7 +515,9 @@ async function startStream() {
     realtimeClient.on("generationTick", async ({ seconds }) => {
       billingSecs.textContent = seconds;
       billingCounter.style.display = "block";
-      await drainCoins();
+      const elapsed = Math.max(1, seconds - lastBilledSeconds);
+      lastBilledSeconds = seconds;
+      await drainCoins(elapsed);
     });
 
     realtimeClient.on("error", (err) => {
@@ -561,6 +565,7 @@ async function stopStream(silent = false) {
   inputPlaceholder.style.display = outputPlaceholder.style.display = "";
   billingCounter.style.display = "none";
   isConnected = settingsApplied = false;
+  lastBilledSeconds = 0;
   startBtn.disabled = false; stopBtn.disabled = true; applyBtn.disabled = true;
   setStatus("IDLE", "");
   if (!silent) showToast("✓ Stream stopped.");
