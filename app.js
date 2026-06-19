@@ -130,21 +130,25 @@ window.addEventListener('marv:logged-in', async (e) => {
   currentEmail = e.detail.email;
   await loadCoins(currentEmail);
 
-  // Fetch Decart API key from backend
-  try {
-    const res  = await fetch('/api/get-key', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: currentEmail })
-    });
-    const data = await res.json();
-    if (data.key) {
-      decartApiKey = data.key;
-    } else {
-      showToast('⚠ Could not load API key: ' + (data.error || 'Unknown error. Check Vercel env vars.'), 6000);
+  // Fetch Decart API key from backend (with retry for cold-start delays)
+  (async () => {
+    const maxAttempts = 4;
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const res  = await fetch('/api/get-key', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: currentEmail })
+        });
+        const data = await res.json();
+        if (data.key) { decartApiKey = data.key; return; }
+        if (attempt === maxAttempts) showToast('⚠ Could not load API key: ' + (data.error || 'Unknown error.'), 6000);
+      } catch (_) {
+        if (attempt === maxAttempts) showToast('⚠ API key unavailable. Please refresh the page.', 6000);
+      }
+      if (attempt < maxAttempts) await delay(attempt * 2000); // 2s, 4s, 6s
     }
-  } catch (err) {
-    showToast('⚠ API key fetch failed: ' + err.message, 6000);
-  }
+  })();
 
   // Start heartbeat
   startHeartbeat(currentEmail);
