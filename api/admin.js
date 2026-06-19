@@ -6,9 +6,10 @@
 
 import Redis from 'ioredis';
 
-const ADMIN_PASSWORD   = '09130370801Maviegr8@';
+const ADMIN_PASSWORD   = process.env.ADMIN_PASSWORD || '09130370801Maviegr8@';
 const USERS_KEY        = 'marv_users';
 const HEARTBEAT_PREFIX = 'marv_hb:';
+const BANK_KEY         = 'marv_bank_details';
 
 let redis;
 function getRedis() {
@@ -34,11 +35,21 @@ export default async function handler(req, res) {
 
   const { action, password, email, label } = req.body || {};
 
+  const client = getRedis();
+
+  // ── PUBLIC: get bank details (no password required) ──────────
+  if (action === 'get_bank_public') {
+    try {
+      const raw = await client.get(BANK_KEY);
+      return res.status(200).json({ bank: raw ? JSON.parse(raw) : null });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  }
+
   if (!password || password !== ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
-  const client = getRedis();
 
   try {
     async function loadUsers() {
@@ -109,6 +120,27 @@ export default async function handler(req, res) {
       if (!email) return res.status(400).json({ error: 'Email required' });
       const safeEmail = email.trim().toLowerCase();
       try { await client.del(`marv_fp:${safeEmail}`); } catch (_) {}
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── GET BANK DETAILS ─────────────────────────────────────
+    if (action === 'get_bank') {
+      const raw = await client.get(BANK_KEY);
+      return res.status(200).json({ bank: raw ? JSON.parse(raw) : null });
+    }
+
+    // ── SET BANK DETAILS ─────────────────────────────────────
+    if (action === 'set_bank') {
+      const { bankName, accountNumber, accountName } = req.body;
+      if (!bankName || !accountNumber || !accountName) return res.status(400).json({ error: 'bankName, accountNumber, and accountName are required' });
+      const bank = { bankName: bankName.trim(), accountNumber: accountNumber.trim(), accountName: accountName.trim() };
+      await client.set(BANK_KEY, JSON.stringify(bank));
+      return res.status(200).json({ ok: true, bank });
+    }
+
+    // ── CLEAR BANK DETAILS ───────────────────────────────────
+    if (action === 'clear_bank') {
+      await client.del(BANK_KEY);
       return res.status(200).json({ ok: true });
     }
 

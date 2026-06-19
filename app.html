@@ -336,23 +336,43 @@
       <div class="modal-body">
         <div class="packages-grid" id="packages-grid"><div style="grid-column:1/-1;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.7rem;padding:20px">Loading packages…</div></div>
         <div id="pay-section" style="display:none">
-          <div class="network-tabs">
+          <div class="network-tabs" id="net-tabs-row">
             <button class="net-tab active" data-net="trc20">USDT TRC20</button>
             <button class="net-tab" data-net="erc20">USDT ERC20</button>
             <button class="net-tab" data-net="btc">Bitcoin</button>
+            <button class="net-tab" data-net="bank">Bank Transfer</button>
           </div>
-          <div class="wallet-box">
-            <div class="wallet-label">Send exactly to this address</div>
-            <div class="wallet-addr" id="wallet-addr">—</div>
-            <div class="wallet-amount" id="wallet-amount">—</div>
-            <button class="copy-addr-btn" id="copy-addr-btn">📋 Copy Address</button>
+
+          <!-- Crypto payment section -->
+          <div id="crypto-pay-area">
+            <div class="wallet-box">
+              <div class="wallet-label">Send exactly to this address</div>
+              <div class="wallet-addr" id="wallet-addr">—</div>
+              <div class="wallet-amount" id="wallet-amount">—</div>
+              <button class="copy-addr-btn" id="copy-addr-btn">📋 Copy Address</button>
+            </div>
+            <div class="tx-input-wrap">
+              <label class="tx-label">Transaction Hash / TXID</label>
+              <input type="text" id="tx-hash-input" placeholder="Paste your transaction hash here…" />
+            </div>
+            <button class="verify-btn" id="verify-btn">Verify Payment</button>
+            <div class="pay-note">After sending, paste your transaction hash above and click Verify.<br>Coins are added automatically once confirmed on-chain.</div>
           </div>
-          <div class="tx-input-wrap">
-            <label class="tx-label">Transaction Hash / TXID</label>
-            <input type="text" id="tx-hash-input" placeholder="Paste your transaction hash here…" />
+
+          <!-- Bank transfer section -->
+          <div id="bank-pay-area" style="display:none">
+            <div class="wallet-box" id="bank-details-box">
+              <div class="wallet-label">Transfer to this account</div>
+              <div id="bank-details-content" style="font-family:'Space Mono',monospace;font-size:0.78rem;line-height:2">Loading bank details…</div>
+              <div class="wallet-amount" id="bank-amount">—</div>
+            </div>
+            <div class="tx-input-wrap">
+              <label class="tx-label">Your name / Reference (optional)</label>
+              <input type="text" id="bank-ref-input" placeholder="e.g. John Doe — helps us match your transfer" />
+            </div>
+            <button class="verify-btn" id="bank-submit-btn">Submit Transfer Request</button>
+            <div class="pay-note">After transferring, click the button above. An admin will verify and credit your coins within a few hours.</div>
           </div>
-          <button class="verify-btn" id="verify-btn">Verify Payment</button>
-          <div class="pay-note">After sending, paste your transaction hash above and click Verify.<br>Coins are added automatically once confirmed on-chain.</div>
         </div>
       </div>
     </div>

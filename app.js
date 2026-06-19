@@ -291,7 +291,7 @@ async function loadPackages() {
         selectedPkg = pkgs.find(p => p.id === card.dataset.id);
         document.getElementById('pay-section').style.display = 'block';
         loadWallets();
-        updateWalletDisplay();
+        showPayArea(activeNet);
       });
     });
   } catch (_) {
@@ -309,13 +309,66 @@ async function loadWallets() {
 }
 
 let activeNet = 'trc20';
+let bankDetails = null;
+
+function showPayArea(net) {
+  const cryptoArea = document.getElementById('crypto-pay-area');
+  const bankArea   = document.getElementById('bank-pay-area');
+  if (net === 'bank') {
+    cryptoArea.style.display = 'none';
+    bankArea.style.display   = 'block';
+    loadBankDetails();
+    updateBankDisplay();
+  } else {
+    cryptoArea.style.display = 'block';
+    bankArea.style.display   = 'none';
+    updateWalletDisplay();
+  }
+}
+
 function updateWalletDisplay() {
   if (!selectedPkg) return;
-  const addr = wallets[activeNet] || '—';
-  document.getElementById('wallet-addr').textContent   = addr;
-  document.getElementById('wallet-amount').textContent = activeNet === 'btc'
-    ? `≈ $${selectedPkg.priceUsd} USD in BTC`
-    : `${selectedPkg.priceUsd} USDT/USDC`;
+  const addr = wallets[activeNet] || null;
+  if (!addr) {
+    document.getElementById('wallet-addr').textContent   = 'Not available at the moment. Please try another payment method.';
+    document.getElementById('wallet-amount').textContent = '';
+    document.getElementById('copy-addr-btn').style.display = 'none';
+  } else {
+    document.getElementById('wallet-addr').textContent   = addr;
+    document.getElementById('wallet-amount').textContent = activeNet === 'btc'
+      ? `≈ $${selectedPkg.priceUsd} USD in BTC`
+      : `${selectedPkg.priceUsd} USDT/USDC`;
+    document.getElementById('copy-addr-btn').style.display = '';
+  }
+}
+
+async function loadBankDetails() {
+  if (bankDetails !== null) return;
+  try {
+    const res  = await fetch('/api/admin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'get_bank_public' }) });
+    const data = await res.json();
+    bankDetails = data.bank || false;
+  } catch (_) { bankDetails = false; }
+  updateBankDisplay();
+}
+
+function updateBankDisplay() {
+  const box = document.getElementById('bank-details-content');
+  const amt = document.getElementById('bank-amount');
+  if (!selectedPkg) return;
+  if (!bankDetails) {
+    box.textContent = 'Not available at the moment. Please try another payment method.';
+    amt.textContent = '';
+    document.getElementById('bank-submit-btn').disabled = true;
+    return;
+  }
+  document.getElementById('bank-submit-btn').disabled = false;
+  box.innerHTML = `
+    <div><span style="color:var(--muted);font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase">Bank</span><br><strong>${bankDetails.bankName}</strong></div>
+    <div style="margin-top:8px"><span style="color:var(--muted);font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase">Account Number</span><br><strong style="font-size:1.1rem;letter-spacing:0.1em">${bankDetails.accountNumber}</strong></div>
+    <div style="margin-top:8px"><span style="color:var(--muted);font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase">Account Name</span><br><strong>${bankDetails.accountName}</strong></div>
+  `;
+  amt.textContent = `Transfer ₦${Number(selectedPkg.priceNaira).toLocaleString()} (${selectedPkg.label} package)`;
 }
 
 document.querySelectorAll('.net-tab').forEach(tab => {
@@ -323,7 +376,7 @@ document.querySelectorAll('.net-tab').forEach(tab => {
     document.querySelectorAll('.net-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     activeNet = tab.dataset.net;
-    updateWalletDisplay();
+    showPayArea(activeNet);
   });
 });
 
@@ -356,6 +409,30 @@ document.getElementById('verify-btn').addEventListener('click', async () => {
     showToast('⚠ Connection error. Please try again.');
   }
   btn.textContent = 'Verify Payment'; btn.disabled = false;
+});
+
+document.getElementById('bank-submit-btn').addEventListener('click', async () => {
+  if (!selectedPkg || !currentEmail) return;
+  const ref = document.getElementById('bank-ref-input').value.trim();
+  const btn = document.getElementById('bank-submit-btn');
+  btn.textContent = 'Submitting…'; btn.disabled = true;
+  try {
+    const res  = await fetch('/api/coins', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action:'bank_request', email: currentEmail, packageId: selectedPkg.id, amountNaira: selectedPkg.priceNaira, note: ref })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('✓ Transfer request submitted! An admin will verify and credit your coins.', 6000, true);
+      document.getElementById('buy-coins-modal').classList.remove('open');
+      document.getElementById('bank-ref-input').value = '';
+    } else {
+      showToast('⚠ ' + (data.error || 'Failed to submit request.'));
+    }
+  } catch (_) {
+    showToast('⚠ Connection error. Please try again.');
+  }
+  btn.textContent = 'Submit Transfer Request'; btn.disabled = false;
 });
 
 // Load packages when modal opens

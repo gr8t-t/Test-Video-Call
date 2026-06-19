@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up — MARV AI</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #060608;
+      --surface: #0d0d10;
+      --border:  #1f1f26;
+      --border2: #2a2a35;
+      --neon:    #ff1a1a;
+      --text:    #f0f0f5;
+      --muted:   #55556a;
+      --muted2:  #38384a;
+      --green:   #3eff8b;
+      --radius:  10px;
+    }
+
+    html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+
+    body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; position: relative; overflow-x: hidden;
+    }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+    body::after {
+      content: ''; position: fixed;
+      top: -200px; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 500px;
+      background: radial-gradient(ellipse, rgba(255,26,26,0.09) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .back-link {
+      position: fixed; top: 28px; left: 32px; z-index: 10;
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .signup-wrap {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 480px;
+      display: flex; flex-direction: column; align-items: center; gap: 24px;
+    }
+
+    .logo-area { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .logo-sub  { font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); }
+
+    /* Steps indicator */
+    .steps-row {
+      display: flex; align-items: center; gap: 0; width: 100%;
+    }
+    .step-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .step-circle {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--border2); background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted);
+      transition: all 0.3s;
+    }
+    .step-circle.active { border-color: var(--neon); color: var(--neon); background: rgba(255,26,26,0.08); box-shadow: 0 0 12px rgba(255,26,26,0.2); }
+    .step-circle.done   { border-color: var(--green); color: var(--green); background: rgba(62,255,139,0.08); }
+    .step-label {
+      font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--muted); text-align: center;
+    }
+    .step-label.active { color: var(--neon); }
+    .step-connector {
+      flex: 0.4; height: 1px; background: var(--border2); margin-bottom: 22px;
+    }
+    .step-connector.done { background: var(--green); }
+
+    .card {
+      width: 100%; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 18px;
+      padding: 32px 28px 28px; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,26,26,0.4), transparent);
+    }
+
+    .card-heading { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.1em; color: var(--text); margin-bottom: 4px; line-height: 1; }
+    .card-sub     { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-family: 'Space Mono', monospace; font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .field input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: 12px 14px; color: var(--text);
+      font-family: 'Space Mono', monospace; font-size: 0.82rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input:focus { border-color: var(--neon); box-shadow: 0 0 0 3px rgba(255,26,26,0.08); }
+    .field input::placeholder { color: var(--muted2); }
+
+    .primary-btn {
+      width: 100%; margin-top: 6px; padding: 15px 24px;
+      background: linear-gradient(135deg, #ff1a1a 0%, #c0392b 60%, #7b0d0d 100%);
+      border: none; border-radius: var(--radius); color: #fff;
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.2em;
+      cursor: pointer; transition: all 0.22s;
+      box-shadow: 0 4px 28px rgba(255,26,26,0.3);
+      position: relative; overflow: hidden;
+    }
+    .primary-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%); }
+    .primary-btn:hover   { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(255,26,26,0.5); }
+    .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      display: none; margin-top: 14px; padding: 11px 14px; border-radius: 8px;
+      background: rgba(123,13,13,0.3); border: 1px solid rgba(255,26,26,0.3);
+      color: #ff6b6b; font-family: 'Space Mono', monospace; font-size: 0.68rem;
+      letter-spacing: 0.04em; line-height: 1.6; text-align: center;
+    }
+    .error-msg.show { display: block; }
+
+    .success-msg {
+      display: none; margin-top: 14px; padding: 14px 16px; border-radius: 10px;
+      background: rgba(6,20,12,0.8); border: 1px solid rgba(62,255,139,0.35);
+      color: var(--green); font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      letter-spacing: 0.04em; line-height: 1.8; text-align: center;
+    }
+    .success-msg.show { display: block; }
+
+    /* Payment method tabs */
+    .method-tabs {
+      display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .method-tab {
+      flex: 1; min-width: 120px; padding: 11px 10px; border-radius: var(--radius);
+      border: 1px solid var(--border2); background: var(--bg); color: var(--muted);
+      font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.06em;
+      cursor: pointer; transition: all 0.15s; text-align: center;
+    }
+    .method-tab:hover { border-color: #c0392b; color: var(--text); }
+    .method-tab.active { border-color: var(--neon); color: var(--neon); background: rgba(255,26,26,0.07); }
+
+    /* Network tabs (crypto) */
+    .net-tabs { display: flex; gap: 7px; margin-bottom: 16px; flex-wrap: wrap; }
+    .net-tab {
+      flex: 1; min-width: 80px; padding: 9px 7px; border-radius: 8px;
+      border: 1px solid var(--border2); background: var(--bg); color: var(--muted);
+      font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.06em;
+      cursor: pointer; transition: all 0.15s; text-align: center;
+    }
+    .net-tab:hover { border-color: #c0392b; color: var(--text); }
+    .net-tab.active { border-color: var(--neon); color: var(--neon); background: rgba(255,26,26,0.07); }
+
+    .info-box {
+      background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius);
+      padding: 14px 16px; margin-bottom: 16px;
+    }
+    .info-box-label {
+      font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+    }
+    .info-box-addr {
+      font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--text);
+      word-break: break-all; line-height: 1.6;
+    }
+    .info-box-amount {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--green);
+      margin-top: 8px; letter-spacing: 0.06em;
+    }
+    .copy-btn {
+      margin-top: 10px; width: 100%; padding: 9px; background: transparent;
+      border: 1px solid var(--border2); color: var(--muted); border-radius: 7px;
+      font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.08em;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--green); color: var(--green); }
+
+    .fee-callout {
+      background: rgba(255,26,26,0.06); border: 1px solid rgba(255,26,26,0.2);
+      border-radius: var(--radius); padding: 12px 16px; margin-bottom: 18px;
+      font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted);
+      line-height: 1.7; text-align: center;
+    }
+    .fee-callout strong { color: var(--neon); font-size: 1rem; display: block; margin-bottom: 2px; }
+
+    .signup-footer {
+      font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em;
+      color: var(--muted); text-align: center; line-height: 1.8;
+    }
+    .signup-footer a { color: rgba(255,26,26,0.7); text-decoration: none; }
+    .signup-footer a:hover { color: var(--neon); }
+
+    .marv-logo { height: 42px; overflow: visible; }
+
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1a0505; border: 1px solid rgba(255,26,26,0.4); color: #ff8080;
+      border-radius: var(--radius); padding: 13px 24px;
+      font-family: 'Space Mono', monospace; font-size: 0.74rem;
+      max-width: 380px; text-align: center; z-index: 60000;
+      transition: transform 0.35s cubic-bezier(.2,.8,.4,1), opacity 0.35s;
+      opacity: 0; box-shadow: 0 8px 30px rgba(0,0,0,0.5); pointer-events: none;
+    }
+    #toast.show         { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.show.green   { background: rgba(6,20,12,0.95); border-color: rgba(62,255,139,0.4); color: var(--green); }
+
+    .access-code-reveal {
+      background: rgba(62,255,139,0.05); border: 1px solid rgba(62,255,139,0.3);
+      border-radius: var(--radius); padding: 18px; text-align: center; margin: 14px 0;
+    }
+    .access-code-val {
+      font-family: 'Space Mono', monospace; font-size: 1.1rem; letter-spacing: 0.2em;
+      color: var(--green); font-weight: 700; margin-bottom: 6px;
+    }
+    .access-code-hint {
+      font-family: 'Space Mono', monospace; font-size: 0.58rem; color: var(--muted); letter-spacing: 0.06em;
+    }
+    .copy-code-btn {
+      margin-top: 10px; padding: 8px 18px;
+      background: transparent; border: 1px solid rgba(62,255,139,0.4); color: var(--green);
+      border-radius: 7px; font-family: 'Space Mono', monospace; font-size: 0.62rem;
+      letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s;
+    }
+    .copy-code-btn:hover { background: rgba(62,255,139,0.1); }
+
+    #step1, #step2, #step-done { display: none; }
+    #step1.active, #step2.active, #step-done.active { display: block; }
+
+    .bank-detail-line { margin-bottom: 8px; }
+    .bank-detail-key  { font-family: 'Space Mono', monospace; font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    .bank-detail-val  { font-family: 'Space Mono', monospace; font-size: 0.82rem; color: var(--text); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <a href="login.html" class="back-link">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Back to Sign In
+  </a>
+
+  <div class="signup-wrap">
+
+    <!-- Logo -->
+    <div class="logo-area">
+      <svg class="marv-logo" viewBox="0 0 160 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="glow2" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <clipPath id="clip-main"><rect x="0" y="0" width="160" height="42"/></clipPath>
+          <clipPath id="clip-top"><rect x="0" y="0" width="160" height="14"/></clipPath>
+          <clipPath id="clip-mid"><rect x="0" y="14" width="160" height="10"/></clipPath>
+        </defs>
+        <text x="2" y="34" font-family="'Bebas Neue', sans-serif" font-size="38" fill="#ff1a1a" opacity="0.25" filter="url(#glow2)">MARV</text>
+        <g clip-path="url(#clip-main)"><text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38" fill="#ff1a1a" filter="url(#glow)" letter-spacing="2">MARV</text></g>
+        <g clip-path="url(#clip-top)"><text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38" fill="#ff6b6b" letter-spacing="2" opacity="0"><animate attributeName="opacity" values="0;0;1;0;0;0;1;0" dur="4s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0,0;3,0;-2,0;0,0" dur="4s" repeatCount="indefinite"/>MARV</text></g>
+        <g clip-path="url(#clip-mid)"><text x="1" y="34" font-family="'Bebas Neue', sans-serif" font-size="38" fill="#7b0d0d" letter-spacing="2" opacity="0"><animate attributeName="opacity" values="0;0;0;1;0;0;0;1;0" dur="5.5s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0,0;-4,0;2,0;0,0" dur="5.5s" repeatCount="indefinite"/>MARV</text></g>
+        <rect x="0" y="0" width="160" height="1.5" fill="rgba(255,26,26,0.55)"><animateTransform attributeName="transform" type="translate" values="0,-5;0,48;0,-5" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.9;0" dur="3s" repeatCount="indefinite"/></rect>
+      </svg>
+      <div class="logo-sub">Realtime AI Transform</div>
+    </div>
+
+    <!-- Steps indicator -->
+    <div class="steps-row">
+      <div class="step-item">
+        <div class="step-circle active" id="step1-circle">1</div>
+        <div class="step-label active" id="step1-label">Account</div>
+      </div>
+      <div class="step-connector" id="connector-1"></div>
+      <div class="step-item">
+        <div class="step-circle" id="step2-circle">2</div>
+        <div class="step-label" id="step2-label">Payment</div>
+      </div>
+      <div class="step-connector" id="connector-2"></div>
+      <div class="step-item">
+        <div class="step-circle" id="step3-circle">✓</div>
+        <div class="step-label" id="step3-label">Access</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Account details -->
+    <div class="card" id="step1">
+      <div class="card-heading">Create Account</div>
+      <div class="card-sub">Step 1 of 2 — Set up your login details</div>
+
+      <div class="field">
+        <label for="s1-email">Email Address</label>
+        <input type="email" id="s1-email" placeholder="you@example.com" autocomplete="email" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label for="s1-pass">Password <span style="color:var(--muted2);font-size:0.5rem">(you'll use this as your account password)</span></label>
+        <input type="password" id="s1-pass" placeholder="Choose a password" autocomplete="new-password" />
+      </div>
+      <div class="field">
+        <label for="s1-pass2">Confirm Password</label>
+        <input type="password" id="s1-pass2" placeholder="Repeat your password" autocomplete="new-password" />
+      </div>
+
+      <button class="primary-btn" id="step1-next-btn">Continue to Payment</button>
+      <div class="error-msg" id="step1-error"></div>
+    </div>
+
+    <!-- STEP 2: Payment -->
+    <div class="card" id="step2">
+      <div class="card-heading">One-Time Access Fee</div>
+      <div class="card-sub">Step 2 of 2 — Pay to activate your account</div>
+
+      <div class="fee-callout" id="fee-callout">
+        <strong id="fee-display">Loading…</strong>
+        One-time access fee · <span id="fee-coins-note">500 MARV coins included</span>
+      </div>
+
+      <div class="method-tabs">
+        <button class="method-tab active" id="tab-crypto">Crypto</button>
+        <button class="method-tab" id="tab-bank">Bank Transfer</button>
+      </div>
+
+      <!-- Crypto payment -->
+      <div id="crypto-section">
+        <div class="net-tabs">
+          <button class="net-tab active" data-net="trc20">USDT TRC20</button>
+          <button class="net-tab" data-net="erc20">USDT ERC20</button>
+          <button class="net-tab" data-net="btc">Bitcoin</button>
+        </div>
+        <div class="info-box" id="wallet-info-box">
+          <div class="info-box-label">Send exactly to this address</div>
+          <div class="info-box-addr" id="signup-wallet-addr">Loading…</div>
+          <div class="info-box-amount" id="signup-wallet-amount">—</div>
+          <button class="copy-btn" id="signup-copy-addr">📋 Copy Address</button>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="signup-tx">Transaction Hash / TXID</label>
+          <input type="text" id="signup-tx" placeholder="Paste your transaction hash here…" spellcheck="false" />
+        </div>
+        <button class="primary-btn" id="crypto-verify-btn" style="margin-top:14px">Verify &amp; Activate</button>
+        <div class="error-msg" id="crypto-error"></div>
+      </div>
+
+      <!-- Bank transfer -->
+      <div id="bank-section" style="display:none">
+        <div class="info-box" id="bank-info-box">
+          <div class="info-box-label">Transfer to this account</div>
+          <div id="bank-info-content">Loading bank details…</div>
+          <div class="info-box-amount" id="bank-fee-amount">—</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="bank-sender-name">Your Name / Reference</label>
+          <input type="text" id="bank-sender-name" placeholder="e.g. John Doe — so admin can identify you" />
+        </div>
+        <button class="primary-btn" id="bank-submit-btn" style="margin-top:14px">Submit Transfer Request</button>
+        <div class="error-msg" id="bank-error"></div>
+      </div>
+
+      <div style="margin-top:14px;text-align:center">
+        <button style="background:none;border:none;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;cursor:pointer;text-decoration:underline" id="back-to-step1">← Change account details</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Done / Pending -->
+    <div class="card" id="step-done">
+      <div id="done-approved">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:2.8rem;margin-bottom:12px">🎉</div>
+          <div class="card-heading" style="margin-bottom:6px">Account Activated!</div>
+          <div class="card-sub" style="margin-bottom:0">Your MARV AI account is ready. Save your access code below.</div>
+        </div>
+        <div class="access-code-reveal">
+          <div class="access-code-key" style="font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Your Access Code</div>
+          <div class="access-code-val" id="access-code-display">MARV-XXXX-XXXX</div>
+          <div class="access-code-hint">Use this code together with your email to log in.</div>
+          <button class="copy-code-btn" id="copy-access-code">📋 Copy Code</button>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--muted);text-align:center;line-height:1.7;margin-bottom:18px">
+          You received <strong style="color:var(--green)">500 MARV coins</strong> free to get started.<br>
+          Do not share your access code with anyone.
+        </div>
+        <button class="primary-btn" id="go-to-login-btn">Go to Sign In</button>
+      </div>
+
+      <div id="done-pending" style="display:none;text-align:center">
+        <div style="font-size:2.8rem;margin-bottom:14px">⏳</div>
+        <div class="card-heading" style="margin-bottom:6px">Request Submitted!</div>
+        <div class="card-sub" style="margin-bottom:0">Awaiting admin approval</div>
+        <div style="margin-top:18px;font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);line-height:1.9;padding:16px;border:1px solid var(--border2);border-radius:var(--radius)">
+          Your bank transfer request has been received.<br>
+          Once the admin verifies your payment, your account will be activated and your access code will be sent to your email.<br><br>
+          <strong style="color:var(--text)">This usually takes a few hours.</strong>
+        </div>
+        <button class="primary-btn" style="margin-top:20px" id="pending-go-home-btn">Return to Home</button>
+      </div>
+    </div>
+
+    <div class="signup-footer">
+      Already have an account? <a href="login.html">Sign In</a><br />
+      <a href="index.html">← Return to home</a>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script type="module">
+    // ── STATE ────────────────────────────────────────────────────
+    let userEmail    = '';
+    let userPassword = '';
+    let feeData      = { usd: 5, naira: 8000 };
+    let wallets      = {};
+    let bankDetails  = null;
+    let activeNet    = 'trc20';
+    let activeMethod = 'crypto';
+
+    // ── TOAST ────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, green = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = green ? 'show green' : 'show';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.className = '', 4000);
+    }
+
+    // ── STEP MANAGEMENT ─────────────────────────────────────────
+    function goStep(n) {
+      ['step1','step2','step-done'].forEach(id => document.getElementById(id).classList.remove('active'));
+      if (n === 1) { document.getElementById('step1').classList.add('active'); setStepIndicator(1); }
+      if (n === 2) { document.getElementById('step2').classList.add('active'); setStepIndicator(2); }
+      if (n === 3) { document.getElementById('step-done').classList.add('active'); setStepIndicator(3); }
+    }
+
+    function setStepIndicator(active) {
+      ['step1-circle','step2-circle','step3-circle'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        const lb = document.getElementById(['step1-label','step2-label','step3-label'][i]);
+        el.classList.remove('active','done');
+        lb.classList.remove('active','done');
+        if (i + 1 < active) { el.classList.add('done'); lb.classList.add('done'); }
+        else if (i + 1 === active) { el.classList.add('active'); lb.classList.add('active'); }
+      });
+      document.getElementById('connector-1').classList.toggle('done', active > 1);
+      document.getElementById('connector-2').classList.toggle('done', active > 2);
+    }
+
+    // ── INIT ─────────────────────────────────────────────────────
+    goStep(1);
+    loadFeeAndWallets();
+
+    async function loadFeeAndWallets() {
+      try {
+        const [feeRes, walletsRes] = await Promise.all([
+          fetch('/api/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'get_fee' }) }),
+          fetch('/api/crypto-payment', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'get_wallets' }) }),
+        ]);
+        const feeJson     = await feeRes.json();
+        const walletsJson = await walletsRes.json();
+        feeData = feeJson.fee || feeData;
+        wallets = walletsJson.wallets || {};
+      } catch (_) {}
+      renderFee();
+      updateCryptoWallet();
+    }
+
+    function renderFee() {
+      const usd   = feeData.usd || 5;
+      const naira = feeData.naira || 8000;
+      document.getElementById('fee-display').textContent = `₦${Number(naira).toLocaleString()} / $${usd} USD`;
+    }
+
+    // ── STEP 1: ACCOUNT DETAILS ──────────────────────────────────
+    document.getElementById('step1-next-btn').addEventListener('click', async () => {
+      const email  = document.getElementById('s1-email').value.trim().toLowerCase();
+      const pass   = document.getElementById('s1-pass').value;
+      const pass2  = document.getElementById('s1-pass2').value;
+      const errDiv = document.getElementById('step1-error');
+
+      function setErr(msg) { errDiv.textContent = msg; errDiv.classList.add('show'); }
+      errDiv.classList.remove('show');
+
+      if (!email || !pass) { setErr('Please fill in all fields.'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('Please enter a valid email address.'); return; }
+      if (pass.length < 6) { setErr('Password must be at least 6 characters.'); return; }
+      if (pass !== pass2) { setErr('Passwords do not match.'); return; }
+
+      const btn = document.getElementById('step1-next-btn');
+      btn.textContent = 'Checking…'; btn.disabled = true;
+
+      try {
+        const res  = await fetch('/api/signup', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ action:'check_email', email })
+        });
+        const data = await res.json();
+        if (data.exists) { setErr('This email is already registered or pending. Try signing in instead.'); btn.textContent = 'Continue to Payment'; btn.disabled = false; return; }
+
+        userEmail    = email;
+        userPassword = pass;
+        loadBankDetails();
+        goStep(2);
+      } catch (_) {
+        setErr('Connection error. Please try again.');
+      }
+
+      btn.textContent = 'Continue to Payment'; btn.disabled = false;
+    });
+
+    document.getElementById('s1-pass').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('s1-pass2').focus(); });
+    document.getElementById('s1-pass2').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('step1-next-btn').click(); });
+    document.getElementById('s1-email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('s1-pass').focus(); });
+    document.getElementById('back-to-step1').addEventListener('click', () => goStep(1));
+
+    // ── PAYMENT METHOD TABS ───────────────────────────────────────
+    document.getElementById('tab-crypto').addEventListener('click', () => {
+      activeMethod = 'crypto';
+      document.getElementById('tab-crypto').classList.add('active');
+      document.getElementById('tab-bank').classList.remove('active');
+      document.getElementById('crypto-section').style.display = '';
+      document.getElementById('bank-section').style.display   = 'none';
+      updateCryptoWallet();
+    });
+
+    document.getElementById('tab-bank').addEventListener('click', () => {
+      activeMethod = 'bank';
+      document.getElementById('tab-bank').classList.add('active');
+      document.getElementById('tab-crypto').classList.remove('active');
+      document.getElementById('bank-section').style.display   = '';
+      document.getElementById('crypto-section').style.display = 'none';
+      renderBankDetails();
+    });
+
+    // ── CRYPTO NETWORK TABS ───────────────────────────────────────
+    document.querySelectorAll('.net-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.net-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeNet = tab.dataset.net;
+        updateCryptoWallet();
+      });
+    });
+
+    function updateCryptoWallet() {
+      const addr    = wallets[activeNet];
+      const addrEl  = document.getElementById('signup-wallet-addr');
+      const amtEl   = document.getElementById('signup-wallet-amount');
+      const copyBtn = document.getElementById('signup-copy-addr');
+
+      if (!addr) {
+        addrEl.textContent  = 'Not available at the moment. Please try another payment method.';
+        amtEl.textContent   = '';
+        copyBtn.style.display = 'none';
+      } else {
+        addrEl.textContent  = addr;
+        amtEl.textContent   = activeNet === 'btc'
+          ? `≈ $${feeData.usd} USD in BTC`
+          : `${feeData.usd} USDT/USDC`;
+        copyBtn.style.display = '';
+      }
+    }
+
+    document.getElementById('signup-copy-addr').addEventListener('click', () => {
+      const addr = wallets[activeNet];
+      if (!addr) return;
+      navigator.clipboard.writeText(addr).then(() => showToast('✓ Address copied!', true));
+    });
+
+    // ── BANK DETAILS ──────────────────────────────────────────────
+    async function loadBankDetails() {
+      if (bankDetails !== null) return renderBankDetails();
+      try {
+        const res  = await fetch('/api/admin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'get_bank_public' }) });
+        const data = await res.json();
+        bankDetails = data.bank || false;
+      } catch (_) { bankDetails = false; }
+      renderBankDetails();
+    }
+
+    function renderBankDetails() {
+      const box = document.getElementById('bank-info-content');
+      const amt = document.getElementById('bank-fee-amount');
+      amt.textContent = `Transfer ₦${Number(feeData.naira).toLocaleString()} ($${feeData.usd} USD)`;
+
+      if (!bankDetails) {
+        box.innerHTML = '<span style="color:var(--muted);font-family:\'Space Mono\',monospace;font-size:0.72rem">Not available at the moment. Please try another payment method.</span>';
+        document.getElementById('bank-submit-btn').disabled = true;
+        return;
+      }
+      document.getElementById('bank-submit-btn').disabled = false;
+      box.innerHTML = `
+        <div class="bank-detail-line"><div class="bank-detail-key">Bank</div><div class="bank-detail-val">${bankDetails.bankName}</div></div>
+        <div class="bank-detail-line"><div class="bank-detail-key">Account Number</div><div class="bank-detail-val" style="font-size:1.05rem;letter-spacing:0.12em">${bankDetails.accountNumber}</div></div>
+        <div class="bank-detail-line"><div class="bank-detail-key">Account Name</div><div class="bank-detail-val">${bankDetails.accountName}</div></div>
+      `;
+    }
+
+    // ── CRYPTO VERIFY ─────────────────────────────────────────────
+    document.getElementById('crypto-verify-btn').addEventListener('click', async () => {
+      const txHash  = document.getElementById('signup-tx').value.trim();
+      const errDiv  = document.getElementById('crypto-error');
+      errDiv.classList.remove('show');
+
+      if (!txHash) { errDiv.textContent = 'Please paste your transaction hash.'; errDiv.classList.add('show'); return; }
+
+      const btn = document.getElementById('crypto-verify-btn');
+      btn.textContent = 'Verifying…'; btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/signup', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action:'verify_crypto', email: userEmail, emailPassword: userPassword, txHash, network: activeNet })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          document.getElementById('access-code-display').textContent = data.password;
+          document.getElementById('done-approved').style.display = '';
+          document.getElementById('done-pending').style.display  = 'none';
+          goStep(3);
+        } else {
+          errDiv.textContent = data.error || 'Verification failed. Please try again.';
+          errDiv.classList.add('show');
+        }
+      } catch (_) {
+        errDiv.textContent = 'Connection error. Please try again.';
+        errDiv.classList.add('show');
+      }
+
+      btn.textContent = 'Verify & Activate'; btn.disabled = false;
+    });
+
+    // ── BANK SUBMIT ───────────────────────────────────────────────
+    document.getElementById('bank-submit-btn').addEventListener('click', async () => {
+      const senderName = document.getElementById('bank-sender-name').value.trim();
+      const errDiv     = document.getElementById('bank-error');
+      errDiv.classList.remove('show');
+
+      const btn = document.getElementById('bank-submit-btn');
+      btn.textContent = 'Submitting…'; btn.disabled = true;
+
+      try {
+        // Create pending signup first
+        const pendingRes = await fetch('/api/signup', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action:'create_pending', email: userEmail, emailPassword: userPassword, method: 'bank' })
+        });
+        const pendingData = await pendingRes.json();
+
+        if (!pendingData.ok) {
+          errDiv.textContent = pendingData.error || 'Failed to submit request.';
+          errDiv.classList.add('show');
+          btn.textContent = 'Submit Transfer Request'; btn.disabled = false;
+          return;
+        }
+
+        document.getElementById('done-approved').style.display = 'none';
+        document.getElementById('done-pending').style.display  = '';
+        goStep(3);
+
+      } catch (_) {
+        errDiv.textContent = 'Connection error. Please try again.';
+        errDiv.classList.add('show');
+        btn.textContent = 'Submit Transfer Request'; btn.disabled = false;
+        return;
+      }
+
+      btn.textContent = 'Submit Transfer Request'; btn.disabled = false;
+    });
+
+    // ── DONE ACTIONS ──────────────────────────────────────────────
+    document.getElementById('copy-access-code').addEventListener('click', () => {
+      const code = document.getElementById('access-code-display').textContent;
+      navigator.clipboard.writeText(code).then(() => showToast('✓ Access code copied!', true));
+    });
+
+    document.getElementById('go-to-login-btn').addEventListener('click', () => {
+      window.location.href = 'login.html';
+    });
+
+    document.getElementById('pending-go-home-btn').addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    // ── ALREADY LOGGED IN? ────────────────────────────────────────
+    const existingSession = JSON.parse(localStorage.getItem('marv_session') || 'null');
+    if (existingSession?.email) window.location.href = 'app.html';
+  </script>
+
+</body>
+</html>
