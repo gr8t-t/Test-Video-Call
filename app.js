@@ -47,6 +47,7 @@ let settingsApplied = false;
 let outputTab       = null;
 let selectedFormat  = window.__forcedFormat || "laptop";
 let decartApiKey    = null;
+let keyLoadPromise  = null;
 let currentEmail    = null;
 let coinBalance     = 0;
 let coinMaxBalance  = 0;
@@ -125,30 +126,30 @@ async function drainCoins(seconds = 1) {
   } catch (_) {}
 }
 
+// ── API KEY LOADER ────────────────────────────────────────────
+async function fetchApiKey(email) {
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      const res  = await fetch('/api/get-key', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.key) { decartApiKey = data.key; return true; }
+    } catch (_) {}
+    if (attempt < 5) await delay(attempt * 1500); // 1.5s, 3s, 4.5s, 6s
+  }
+  return false;
+}
+
 // ── INIT (called after auth confirms user) ────────────────────
 window.addEventListener('marv:logged-in', async (e) => {
   currentEmail = e.detail.email;
   await loadCoins(currentEmail);
 
   // Fetch Decart API key from backend (with retry for cold-start delays)
-  (async () => {
-    const maxAttempts = 4;
-    const delay = ms => new Promise(r => setTimeout(r, ms));
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        const res  = await fetch('/api/get-key', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: currentEmail })
-        });
-        const data = await res.json();
-        if (data.key) { decartApiKey = data.key; return; }
-        if (attempt === maxAttempts) showToast('⚠ Could not load API key: ' + (data.error || 'Unknown error.'), 6000);
-      } catch (_) {
-        if (attempt === maxAttempts) showToast('⚠ API key unavailable. Please refresh the page.', 6000);
-      }
-      if (attempt < maxAttempts) await delay(attempt * 2000); // 2s, 4s, 6s
-    }
-  })();
+  keyLoadPromise = fetchApiKey(currentEmail);
 
   // Start heartbeat
   startHeartbeat(currentEmail);
@@ -452,8 +453,15 @@ stopBtn.addEventListener("click",  () => stopStream());
 
 async function startStream() {
   if (!decartApiKey) {
-    showToast("⚠ API key not loaded. Please refresh and try again.");
-    return;
+    startBtn.disabled = true;
+    setStatus("LOADING KEY…", "connecting");
+    const ok = await (keyLoadPromise || fetchApiKey(currentEmail));
+    if (!decartApiKey) {
+      showToast("⚠ Could not reach server. Please check your connection and refresh.", 7000);
+      setStatus("ERROR", "error");
+      startBtn.disabled = false;
+      return;
+    }
   }
   if (coinBalance <= 0) {
     showToast("⚠ You have no coins. Please top up to start streaming.");
