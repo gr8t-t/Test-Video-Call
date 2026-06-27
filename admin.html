@@ -672,7 +672,7 @@
       const video = parseFloat(document.getElementById('drain-rate-video').value);
       if (isNaN(video) || video <= 0) { showToast('⚠ Enter a valid drain rate.'); return; }
       const btn = document.getElementById('save-drain-btn'); btn.disabled = true; btn.textContent = 'SAVING…';
-      try { await coinsApi({ action:'set_rates', rates: { video } }); showToast('✓ Drain rate updated.', true); }
+      try { await coinsApi({ action:'set_rates', video }); showToast('✓ Drain rate updated.', true); }
       catch(e) { showToast('⚠ ' + e.message); }
       btn.disabled = false; btn.textContent = 'SAVE';
     });
