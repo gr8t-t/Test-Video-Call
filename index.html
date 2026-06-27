@@ -399,20 +399,25 @@
       const grid    = document.getElementById('pricing-grid');
       const loading = document.getElementById('pricing-loading');
       try {
-        const res  = await fetch('/api/coins', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'get_packages' }) });
-        const data = await res.json();
+        const [pkgRes, rateRes] = await Promise.all([
+          fetch('/api/coins', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'get_packages' }) }),
+          fetch('/api/coins', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'get_rates' }) }),
+        ]);
+        const data     = await pkgRes.json();
+        const rateData = await rateRes.json();
+        const rate     = parseFloat(rateData?.rates?.video) || 2;
         const pkgs = data.packages || [];
         if (!pkgs.length) { loading.textContent = 'Contact us for current pricing.'; return; }
         grid.innerHTML = pkgs.map((p, i) => {
           const isFeatured = p.featured || i === Math.floor(pkgs.length / 2);
-          const timeMin    = Math.floor(p.coins / 120);
+          const timeMin    = Math.floor(p.coins / (rate * 60));
           return `<div class="pricing-card${isFeatured ? ' featured' : ''}">
             ${isFeatured ? '<div class="pricing-badge">Most Popular</div>' : ''}
             <div class="pricing-coins">${Number(p.coins).toLocaleString()}</div>
             <div class="pricing-coins-label">Coins</div>
             <div class="pricing-price">&#x20A6;${Number(p.priceNaira).toLocaleString()}</div>
             <div class="pricing-usd">&#x2248; $${p.priceUsd} USD</div>
-            <div class="pricing-time">~<strong>${timeMin} minutes</strong><br>of streaming at 2 coins/sec</div>
+            <div class="pricing-time">~<strong>${timeMin} minutes</strong><br>of streaming at ${rate} coins/sec</div>
           </div>`;
         }).join('');
       } catch (_) {

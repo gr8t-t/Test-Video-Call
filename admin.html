@@ -297,7 +297,7 @@
         <div class="two-col">
           <div class="card" style="margin-bottom:0">
             <div class="card-title"><div class="card-title-dot"></div>Drain Rate</div>
-            <p style="font-size:0.82rem;color:var(--muted);line-height:1.7;margin-bottom:18px">How many coins are removed per second of streaming. Currently set to <strong style="color:var(--text)">2 coins/sec</strong> (1 min = 120 coins).</p>
+            <p style="font-size:0.82rem;color:var(--muted);line-height:1.7;margin-bottom:18px">How many coins are removed per second of streaming. Currently set to <strong style="color:var(--text)" id="drain-rate-label">2 coins/sec</strong> (1 min = <span id="drain-rate-permin">120</span> coins).</p>
             <div class="form-row form-row-1">
               <div class="input-group">
                 <label for="drain-rate-video">Coins per second (video)</label>
@@ -663,8 +663,16 @@
     });
 
     // ── SETTINGS ────────────────────────────────────────────────
+    function updateDrainLabel(rate) {
+      const r = parseFloat(rate);
+      if (isNaN(r) || r <= 0) return;
+      const lbl = document.getElementById('drain-rate-label');
+      const pm  = document.getElementById('drain-rate-permin');
+      if (lbl) lbl.textContent = `${r} coins/sec`;
+      if (pm)  pm.textContent  = Math.round(r * 60);
+    }
     async function loadSettings() {
-      try { const d = await coinsApi({ action:'get_rates' }); if (d.rates?.video !== undefined) document.getElementById('drain-rate-video').value = d.rates.video; } catch(_) {}
+      try { const d = await coinsApi({ action:'get_rates' }); if (d.rates?.video !== undefined) { document.getElementById('drain-rate-video').value = d.rates.video; updateDrainLabel(d.rates.video); } } catch(_) {}
       try { const d = await coinsApi({ action:'get_free_coins' }); if (d.freeCoins !== undefined) document.getElementById('free-coins-input').value = d.freeCoins; } catch(_) {}
     }
 
@@ -672,7 +680,7 @@
       const video = parseFloat(document.getElementById('drain-rate-video').value);
       if (isNaN(video) || video <= 0) { showToast('⚠ Enter a valid drain rate.'); return; }
       const btn = document.getElementById('save-drain-btn'); btn.disabled = true; btn.textContent = 'SAVING…';
-      try { await coinsApi({ action:'set_rates', video }); showToast('✓ Drain rate updated.', true); }
+      try { await coinsApi({ action:'set_rates', video }); updateDrainLabel(video); showToast('✓ Drain rate updated.', true); }
       catch(e) { showToast('⚠ ' + e.message); }
       btn.disabled = false; btn.textContent = 'SAVE';
     });
