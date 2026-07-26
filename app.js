@@ -128,6 +128,7 @@ async function drainCoins(seconds = 1) {
 
 // ── API KEY LOADER ────────────────────────────────────────────
 async function fetchApiKey(email) {
+  if (!email) return false;               // never send an empty-email request (was causing 400s)
   const delay = ms => new Promise(r => setTimeout(r, ms));
   for (let attempt = 1; attempt <= 5; attempt++) {
     try {
@@ -143,17 +144,26 @@ async function fetchApiKey(email) {
   return false;
 }
 
-// ── INIT (called after auth confirms user) ────────────────────
-window.addEventListener('marv:logged-in', async (e) => {
-  currentEmail = e.detail.email;
-  await loadCoins(currentEmail);
+// ── INIT (runs once per session) ──────────────────────────────
+let sessionInitialized = false;
+function initSession(email) {
+  if (!email || sessionInitialized) return;
+  sessionInitialized = true;
+  currentEmail = email;
+
+  loadCoins(currentEmail);
 
   // Fetch Decart API key from backend (with retry for cold-start delays)
   keyLoadPromise = fetchApiKey(currentEmail);
 
   // Start heartbeat
   startHeartbeat(currentEmail);
-});
+}
+
+// Honor the boot event (covers the first login right after redirect).
+// A synchronous seed from localStorage also runs at the bottom of this file,
+// once all declarations (heartbeat, etc.) exist — see initSession seed below.
+window.addEventListener('marv:logged-in', (e) => initSession(e.detail?.email));
 
 // ── HEARTBEAT ─────────────────────────────────────────────────
 let heartbeatInterval = null;
@@ -600,3 +610,13 @@ document.addEventListener("keydown", (e) => {
 // ── INITIAL STATE ─────────────────────────────────────────────
 inputVideo.style.display = outputVideo.style.display = "none";
 stopBtn.disabled = applyBtn.disabled = true;
+
+// Seed the email synchronously from the stored session so streaming and coin
+// loading never depend on the async boot/usercheck round-trip finishing first.
+// (Previously currentEmail stayed null until marv:logged-in fired, so an early
+//  Start click sent get-key with no email → 400 "Could not reach server".)
+// Placed at the end so every function/variable it touches is already defined.
+try {
+  const stored = JSON.parse(localStorage.getItem('marv_session') || 'null');
+  if (stored?.email) initSession(stored.email);
+} catch (_) {}
